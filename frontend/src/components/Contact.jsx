@@ -1,23 +1,70 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { portfolioData } from '../data/mock';
-import { Mail, Linkedin, Github } from 'lucide-react';
+import { Mail, Linkedin, Github, Loader2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Contact = () => {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Mock form submission
-    toast({
-      title: "Message sent!",
-      description: "Thank you for reaching out. I'll get back to you soon.",
-    });
-    setEmail('');
-    setMessage('');
+    
+    // Validation
+    if (!email || !message) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (message.length < 10) {
+      toast({
+        title: "Message too short",
+        description: "Please write at least 10 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await axios.post(`${API}/contact`, {
+        email,
+        message
+      });
+      
+      if (response.data.success) {
+        toast({
+          title: "Message sent!",
+          description: response.data.message,
+        });
+        // Clear form
+        setEmail('');
+        setMessage('');
+      } else {
+        throw new Error(response.data.error || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
