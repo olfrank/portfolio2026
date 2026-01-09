@@ -236,7 +236,13 @@ body {
    ============================================ */
 
 .section-padding {
-  padding: 120px 0;
+  padding: 140px 0;
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 100px 0;
+  }
 }
 
 .section-title {
