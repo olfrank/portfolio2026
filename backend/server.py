@@ -70,15 +70,43 @@ async def create_status_check(input: StatusCheckCreate):
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+    status_checks = await db.status_checks.find().to_list(1000)
+    return [StatusCheck(**status_check) for status_check in status_checks]
+
+@api_router.post("/contact")
+async def create_contact_submission(input: ContactSubmissionCreate, request: Request):
+    try:
+        # Get client IP and user agent
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent", "Unknown")
+        
+        # Create submission object
+        submission_dict = input.dict()
+        submission_dict["ip_address"] = ip_address
+        submission_dict["user_agent"] = user_agent
+        submission_obj = ContactSubmission(**submission_dict)
+        
+        # Save to database
+        await db.contact_submissions.insert_one(submission_obj.dict())
+        
+        logger.info(f"Contact submission received from {submission_obj.email}")
+        
+        return {
+            "success": True,
+            "message": "Thank you for reaching out! I'll get back to you soon.",
+            "id": submission_obj.id
+        }
+    except Exception as e:
+        logger.error(f"Error saving contact submission: {str(e)}")
+        return {
+            "success": False,
+            "error": "Failed to submit contact form. Please try again."
+        }
+
+@api_router.get("/contact", response_model=List[ContactSubmission])
+async def get_contact_submissions():
+    submissions = await db.contact_submissions.find().sort("submitted_at", -1).to_list(1000)
+    return [ContactSubmission(**submission) for submission in submissions]
 
 # Include the router in the main app
 app.include_router(api_router)
