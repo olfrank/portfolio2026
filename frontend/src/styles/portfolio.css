@@ -171,11 +171,21 @@ body {
   left: -10%;
   width: 120%;
   height: 140%;
-  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-  opacity: 0.4;
-  filter: blur(80px);
+  background: radial-gradient(ellipse at 30% 40%, var(--gradient-start) 0%, var(--gradient-mid) 40%, var(--gradient-end) 100%);
+  opacity: 0.6;
+  filter: blur(100px);
   border-radius: 50%;
   will-change: transform;
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.05) translate(-2%, 2%);
+  }
 }
 
 .hero-title {
