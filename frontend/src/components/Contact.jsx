@@ -169,12 +169,20 @@ const Contact = () => {
               
               <motion.button
                 type="submit"
+                disabled={isSubmitting}
                 className="form-submit-button w-full"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                Send Message
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Sending...
+                  </span>
+                ) : (
+                  'Send Message'
+                )}
               </motion.button>
             </form>
           </motion.div>
