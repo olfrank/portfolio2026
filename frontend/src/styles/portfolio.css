@@ -519,11 +519,16 @@ body {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
+  transition: background 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
 }
 
-.form-submit-button:hover {
+.form-submit-button:hover:not(:disabled) {
   background: var(--accent-secondary);
+}
+
+.form-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ============================================
