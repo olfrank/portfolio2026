@@ -392,16 +392,32 @@ body {
    ============================================ */
 
 .about-glass-panel {
+  position: relative;
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--glass-border);
   border-radius: 32px;
-  padding: 60px;
-  box-shadow: 0 16px 64px var(--glass-shadow);
+  padding: 70px;
+  box-shadow: 0 20px 70px var(--glass-shadow);
+  overflow: hidden;
+}
+
+.about-glass-panel::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, var(--card-hover-glow) 0%, transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 .about-text {
+  position: relative;
+  z-index: 2;
   font-size: clamp(1.125rem, 2vw, 1.375rem);
   color: var(--text-secondary);
   line-height: 1.8;
