@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { portfolioData } from '../data/mock';
+import { Dithering } from "@paper-design/shaders-react"
 
 const Skills = () => {
   const containerVariants = {
@@ -26,8 +27,25 @@ const Skills = () => {
   };
 
   return (
-    <section id="skills" className="section-padding">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="skills" className="section-padding relative">
+      {/* Background dithering — rendered behind all content */}
+      {/* <div className="absolute inset-0" style={{ zIndex: 0 }}>
+        <Dithering
+          style={{ height: "100%", width: "100%" }}
+          colorBack={"#0a0a0a"}
+          colorFront={"hsla(320, 100%, 70%, 0.53)"}
+          shape="simplex"
+          type="4x4"
+          size={2}
+          offsetX={0}
+          offsetY={0}
+          scale={0.5}
+          rotation={0}
+          speed={0.03}
+        />
+      </div> */}
+
+      <div className="w-1/2 max-w-6xl mx-auto px-6 relative" style={{ zIndex: 1 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -101,6 +119,7 @@ const Skills = () => {
             </motion.div>
           </motion.div>
         </div>
+        
       </div>
     </section>
   );

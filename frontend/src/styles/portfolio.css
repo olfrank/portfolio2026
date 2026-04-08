@@ -13,7 +13,7 @@
   --text-tertiary: #999999;
   --accent-primary: #0071e3;
   --accent-secondary: #06c;
-  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg: rgba(255, 255, 255, 0.379);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: rgba(0, 0, 0, 0.08);
   --gradient-start: #dbeafe;
@@ -31,7 +31,7 @@
   --text-tertiary: #666666;
   --accent-primary: #4d9fff;
   --accent-secondary: #0088ff;
-  --glass-bg: rgba(26, 26, 26, 0.7);
+  --glass-bg: rgba(26, 26, 26, 0.396);
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-shadow: rgba(0, 0, 0, 0.4);
   --gradient-start: #1e3a5f;

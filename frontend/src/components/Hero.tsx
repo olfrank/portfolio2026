@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { portfolioData } from '../data/mock';
 import { ArrowDown } from 'lucide-react';
-import { Waves } from "@/components/ui/wave-background";
+import {GlassButton} from "@/components/ui/liquid-glass"
 
 const Hero = () => {
   const { scrollY } = useScroll();
@@ -13,14 +13,6 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Full-screen waves background */}
-      <div className="absolute inset-0">
-        <Waves />
-      </div>
-
-      {/* Noise texture overlay */}
-      <div className="noise-overlay" />
-
       {/* Content overlay */}
       <motion.div
         className="relative z-10 max-w-5xl mx-auto px-6 text-center"
@@ -41,15 +33,12 @@ const Hero = () => {
             {portfolioData.personal.tagline}
           </p>
 
-          <motion.button
-            onClick={scrollToProjects}
-            className="glass-button"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            View Work
-          </motion.button>
+          <div className='w-fit m-auto '>
+            <GlassButton >
+             <span onClick={scrollToProjects} className='text-white'> View Work</span>
+            </GlassButton>
+          </div>
+          
         </motion.div>
       </motion.div>
 

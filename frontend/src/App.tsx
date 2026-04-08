@@ -9,6 +9,8 @@ import About from './components/About';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import './styles/portfolio.css';
+import { Component } from '../src/components/ui/liquid-glass';
+import { Waves } from './components/ui/wave-background';
 
 function App() {
   useEffect(() => {
@@ -18,8 +20,14 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="App portfolio-app">
-        <Header />
+      <Waves />
+      <div className="App portfolio-app" style={{ position: 'relative', zIndex: 1 }}>
+      
+          
+          
+<Header />
+  
+        
         <main>
           <Hero />
           <Projects />

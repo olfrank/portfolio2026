@@ -11,9 +11,18 @@ export interface PersonalInfo {
 export interface Project {
   id: number;
   name: string;
+  role: string;
   description: string;
   techStack: string[];
   link: string | null;
+  year: string;
+  image: string | null;
+  // Modal fields
+  client: string;
+  category: string;
+  techType: string;
+  fullDescription: string;
+  highlights: string[];
 }
 
 export interface Skills {
@@ -30,8 +39,8 @@ export interface PortfolioData {
 export const portfolioData: PortfolioData = {
   personal: {
     name: "Ollie Francis",
-    title: "Senior Front-End Engineer & Product-Focused Software Developer",
-    tagline: "Design-led front-end engineering for modern products.",
+    title: "Product-focused Front-End Engineer",
+    tagline: "Design-led engineering for modern products.",
     bio: "I'm a product-focused front-end engineer with a strong eye for design and a deep appreciation for detail, motion, and performance. I enjoy building interfaces that feel calm, intuitive, and refined, and I care as much about how something feels as how it functions. My work sits at the intersection of design, engineering, and product thinking.",
     email: "olliefrancis97@hotmail.co.uk",
     linkedin: "https://www.linkedin.com/in/ollie--francis/",
@@ -41,32 +50,69 @@ export const portfolioData: PortfolioData = {
   projects: [
     {
       id: 1,
-      name: "TRAX — Direct-to-Fan Music Platform",
-      description: "A venture-backed direct-to-fan platform enabling artists to monetise content through subscriptions, pay-per-view, and tipping. I led front-end architecture, UX, and premium interaction design across web and mobile.",
-      techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "Capacitor", "Web Audio APIs"],
-      link: null
+      name: "CallGuard",
+      role: "Founder",
+      description: "Built and launched a B2B SaaS product that automates missed-call handling for UK tradespeople, from architecture through to production deployment and customer acquisition.",
+      techStack: ["React", "TypeScript", "Node.js", "Express.js", "PostgresSQL", "REST API", "Render", "Twilio"],
+      link: null,
+      year: "2026",
+      image: null,
+      client: "Self-Founded",
+      category: "SaaS Product",
+      techType: "Full-Stack Development",
+      fullDescription: "CallGuard automates missed-call handling for UK tradespeople — whenever a call goes unanswered, the platform instantly fires an SMS reply with a personalised message and booking link. The product was designed, architected, built, and launched entirely solo, from the first line of code through to live paying customers.\n\nThe backend runs on Node.js and Express with a PostgreSQL database, integrating Twilio webhooks to intercept missed calls and trigger automated responses. The front-end dashboard — built in React and TypeScript — gives business owners full visibility over call activity, control over their auto-reply sequences, and simple customisation without any technical knowledge required.",
+      highlights: [
+        "Designed, built, and shipped end-to-end as a solo founder",
+        "Twilio integration for real-time missed-call detection and automated SMS dispatch",
+        "Multi-tenant PostgreSQL schema supporting isolated business accounts",
+        "Stripe billing integration with usage-based subscription tiers",
+        "Deployed to production on Render with zero-downtime release pipeline",
+        "Live customer acquisition within weeks of launch",
+      ],
     },
     {
       id: 2,
-      name: "Internet Creatives — Web Studio",
-      description: "A boutique web studio delivering fast, modern, conversion-focused websites for clients using a mix of custom code and AI-assisted workflows. Focused on speed, polish, and maintainability.",
-      techStack: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Vercel"],
-      link: null
+      name: "TRAX",
+      role: "Co-Founder & CTO",
+      description: "Co-founded and led engineering at a venture-backed direct-to-fan music platform. Managed a team of 3 engineers while personally owning front-end architecture and feature delivery across web and iOS.",
+      techStack: ["Next.js", "React", "TypeScript", "Motoko", "Tailwind CSS", "Framer Motion", "Capacitor", "Node.js", "Web Audio APIs"],
+      link: null,
+      year: "2022–2026",
+      image: null,
+      client: "TRAX (Venture-Backed)",
+      category: "Music Platform",
+      techType: "Web & iOS Engineering",
+      fullDescription: "TRAX is a direct-to-fan music platform built to give artists true ownership of how their music is distributed, experienced, and monetised — without the gatekeeping of traditional streaming services. As Co-Founder and CTO, I owned the entire front-end codebase across web and native iOS while managing a team of three engineers through the full product lifecycle.\n\nThe platform was built in Next.js and React, with Capacitor providing native iOS deployment from a shared codebase. Audio playback was engineered using the Web Audio API to support gapless transitions and visualisation. On-chain ownership of content was recorded via Motoko smart contracts on the Internet Computer Protocol (ICP), with the Node.js backend bridging web2 infrastructure and the decentralised layer.",
+      highlights: [
+        "Led engineering across web and iOS from pre-seed through to venture-backed growth",
+        "Managed and mentored a team of three engineers across front-end and backend",
+        "Built a custom audio engine using the Web Audio API for gapless playback and waveform visualisation",
+        "Native iOS app delivered via Capacitor from a shared Next.js codebase",
+        "ICP blockchain integration via Motoko for on-chain content ownership",
+        "Designed and implemented the full component architecture and design system",
+      ],
     },
     {
       id: 3,
-      name: "White-Label Fan Hub Platform",
-      description: "A scalable, white-label fan engagement platform built for labels and artist managers, offering analytics dashboards, content gating, and premium UX patterns.",
-      techStack: ["Next.js", "React", "TypeScript", "Node.js", "Charting libraries", "Framer Motion"],
-      link: null
+      name: "Nous",
+      role: "Web3 Developer",
+      description: "Decentralised hedge fund offering fixed and variable rate investment contracts powered by algorithmic trading.",
+      techStack: ["Next.js", "React", "TypeScript", "Solidity", "Tailwind CSS", "Framer Motion"],
+      link: null,
+      year: "2021–2022",
+      image: null,
+      client: "Nous Protocol",
+      category: "DeFi Protocol",
+      techType: "Web3 Development",
+      fullDescription: "Nous is a decentralised hedge fund protocol that offers investors fixed and variable rate returns, with yields generated by an underlying algorithmic trading system. The project spanned both smart contract development and the front-end trading dashboard, requiring tight coordination between on-chain logic and the user-facing interface.\n\nSolidity contracts govern the investment vaults — users can enter a fixed-rate product with predictable returns, or opt into a variable-rate vault where yield tracks live trading performance. The front-end, built in Next.js and TypeScript, surfaces real-time position data and portfolio metrics with smooth Framer Motion transitions throughout.",
+      highlights: [
+        "Solidity smart contracts for fixed and variable rate investment vaults on EVM networks",
+        "Front-end trading dashboard built in Next.js with real-time on-chain data feeds",
+        "Variable-rate yield mechanism tied directly to algorithmic trading performance",
+        "Wallet connection and transaction flows via ethers.js",
+        "Framer Motion used throughout for fluid state transitions and data visualisation",
+      ],
     },
-    {
-      id: 4,
-      name: "Experimental UI & Motion Playground",
-      description: "A collection of UI experiments exploring glassmorphism, parallax scrolling, scroll-based animations, and Apple-inspired interaction patterns. Built to test performance-first motion design.",
-      techStack: ["React", "TypeScript", "Framer Motion", "CSS backdrop-filter", "Web animations"],
-      link: null
-    }
   ],
 
   skills: {

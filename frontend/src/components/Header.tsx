@@ -1,50 +1,26 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { useTheme } from './ThemeProvider';
-import { Moon, Sun } from 'lucide-react';
+import { GlassEffect, GlassFilter } from '@/components/ui/liquid-glass';
 
 const Header = () => {
-  const { theme, toggleTheme } = useTheme();
-
   return (
     <motion.header
-      className="fixed top-0 left-0 right-0 z-50 header-glass"
+      className="fixed top-0 left-0 right-0 z-50 flex justify-center mt-4 "
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <motion.a
-          href="#"
-          className="header-logo"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          OF
-        </motion.a>
-
-        <nav className="hidden md:flex items-center gap-8">
-          <a href="#projects" className="nav-link">Work</a>
-          <a href="#skills" className="nav-link">Skills</a>
-          <a href="#about" className="nav-link">About</a>
-          <a href="#contact" className="nav-link">Contact</a>
-        </nav>
-
-        <motion.button
-          onClick={toggleTheme}
-          className="theme-toggle"
-          whileHover={{ scale: 1.1, rotate: 180 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          aria-label="Toggle theme"
-        >
-          {theme === 'light' ? (
-            <Moon className="w-5 h-5" />
-          ) : (
-            <Sun className="w-5 h-5" />
-          )}
-        </motion.button>
-      </div>
+      <GlassFilter />
+      <GlassEffect className="max-w-[500px] w-full rounded-full">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-center w-full">
+          <nav className="flex items-center gap-8">
+            <a href="#" className="nav-link">OF</a>
+            <a href="#projects" className="nav-link">Work</a>
+            <a href="#skills" className="nav-link">Skills</a>
+            <a href="#about" className="nav-link">About</a>
+            <a href="#contact" className="nav-link">Contact</a>
+          </nav>
+        </div>
+      </GlassEffect>
     </motion.header>
   );
 };

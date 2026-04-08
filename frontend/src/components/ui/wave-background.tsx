@@ -3,30 +3,32 @@ import * as React from 'react'
 import { useEffect, useRef } from 'react'
 import { createNoise2D } from 'simplex-noise'
 
+// Background is taller than the viewport by OVERSPILL on each side so there
+// is always filled content during the parallax translation.
+const PARALLAX_FACTOR = 0.06  // background moves at 6% of scroll speed
+const OVERSPILL = 0.18        // fraction of vh to extend above and below
+
 interface Point {
     x: number
     y: number
-    wave: { x: number; y: number }
-    cursor: {
-        x: number
-        y: number
-        vx: number
-        vy: number
-    }
+    waveX: number
+    waveY: number
+    cx: number
+    cy: number
+    cvx: number
+    cvy: number
 }
 
 interface WavesProps {
     className?: string
-    strokeColor?: string
     backgroundColor?: string
     pointerSize?: number
 }
 
 export function Waves({
     className = "",
-    strokeColor = "#ffffff",  // White lines
-    backgroundColor = "#000000",  // Black background
-    pointerSize = 0.5
+    backgroundColor = "#0c111d",  // deep navy — lifted slightly from pure black
+    pointerSize = 0,
 }: WavesProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<SVGSVGElement>(null)
@@ -43,304 +45,334 @@ export function Waves({
         set: false,
     })
     const pathsRef = useRef<SVGPathElement[]>([])
-    const linesRef = useRef<Point[][]>([])  // 替换any为Point[][]
-    const noiseRef = useRef<((x: number, y: number) => number) | null>(null)  // 替换any为具体的函数类型
+    const linesRef = useRef<Point[][]>([])
+    const noiseRef = useRef<((x: number, y: number) => number) | null>(null)
     const rafRef = useRef<number | null>(null)
-    const boundingRef = useRef<DOMRect | null>(null)
+    const lastFrameRef = useRef<number>(0)
+    const movedXRef = useRef<Float32Array | null>(null)
+    const movedYRef = useRef<Float32Array | null>(null)
+    const pathPartsRef = useRef<string[]>([])
+    // Scroll-driven hue shift
+    const hueTargetRef = useRef(0)
+    const hueCurrentRef = useRef(0)
+    // Parallax translation (px, negative = shifted up)
+    const parallaxTargetRef = useRef(0)
+    const parallaxCurrentRef = useRef(0)
+    // Actual pixel overspill, set in setSize
+    const overspillPxRef = useRef(0)
+    // Full container dimensions (wider than viewport due to overspill height)
+    const dimsRef = useRef({ width: 0, height: 0 })
 
-    // Initialization
     useEffect(() => {
         if (!containerRef.current || !svgRef.current) return
 
-        // Initialize noise generator
         noiseRef.current = createNoise2D()
-
-        // Initialize size and lines
         setSize()
         setLines()
 
-        // Bind events
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                if (rafRef.current) cancelAnimationFrame(rafRef.current)
+            } else {
+                lastFrameRef.current = 0
+                rafRef.current = requestAnimationFrame(tick)
+            }
+        }
+
+        const onScroll = () => {
+            parallaxTargetRef.current = -window.scrollY * PARALLAX_FACTOR
+
+            const maxScroll = document.body.scrollHeight - window.innerHeight
+            if (maxScroll > 0) {
+                hueTargetRef.current = (window.scrollY / maxScroll) * -20
+            }
+        }
+
         window.addEventListener('resize', onResize)
         window.addEventListener('mousemove', onMouseMove)
-        containerRef.current.addEventListener('touchmove', onTouchMove, { passive: false })
+        window.addEventListener('scroll', onScroll, { passive: true })
+        document.addEventListener('visibilitychange', onVisibilityChange)
 
-        // Start animation
         rafRef.current = requestAnimationFrame(tick)
 
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current)
             window.removeEventListener('resize', onResize)
             window.removeEventListener('mousemove', onMouseMove)
-            containerRef.current?.removeEventListener('touchmove', onTouchMove)
+            window.removeEventListener('scroll', onScroll)
+            document.removeEventListener('visibilitychange', onVisibilityChange)
         }
     }, [])
 
-    // Set SVG size
     const setSize = () => {
         if (!containerRef.current || !svgRef.current) return
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+        const overspill = Math.round(vh * OVERSPILL)
+        const containerH = vh + overspill * 2
 
-        boundingRef.current = containerRef.current.getBoundingClientRect()
-        const { width, height } = boundingRef.current
+        overspillPxRef.current = overspill
+        dimsRef.current = { width: vw, height: containerH }
 
-        svgRef.current.style.width = `${width}px`
-        svgRef.current.style.height = `${height}px`
+        // Position container so overspill extends equally above and below viewport
+        containerRef.current.style.top = `${-overspill}px`
+        containerRef.current.style.height = `${containerH}px`
+
+        svgRef.current.style.width = `${vw}px`
+        svgRef.current.style.height = `${containerH}px`
     }
 
-    // Setup lines - more points for smoother curves
+    // Tight muted spectrum: deep blue → soft indigo
+    // Low saturation and reduced lightness keeps lines unobtrusive
+    const getLineColor = (t: number): string => {
+        const h = 215 + t * 20   // 215 (deep blue) → 235 (soft indigo) — narrow range
+        const s = 18 + t * 14    // 18% → 32% — very muted
+        const l = 34 + t * 12    // 34% → 46% — dark, not luminous
+        return `hsl(${h}, ${s}%, ${l}%)`
+    }
+
     const setLines = () => {
-        if (!svgRef.current || !boundingRef.current) return
+        if (!svgRef.current) return
+        const { width, height } = dimsRef.current
+        if (!width || !height) return
 
-        const { width, height } = boundingRef.current
         linesRef.current = []
-
-        // Clear existing paths
-        pathsRef.current.forEach(path => {
-            path.remove()
-        })
+        pathsRef.current.forEach(path => path.remove())
         pathsRef.current = []
 
-        // Use smaller spacing to generate more lines and points for smoother results
-        const xGap = 8  // Reduced horizontal spacing
-        const yGap = 8  // Reduced vertical spacing for denser points
+        const xGap = 10
+        const yGap = 10
 
-        const oWidth = width + 200
-        const oHeight = height + 30
+        // Horizontal lines: iterate over y for lines, x for points
+        const totalLines = Math.ceil((height + 200) / yGap)
+        const totalPoints = Math.ceil((width + 30) / xGap)
 
-        const totalLines = Math.ceil(oWidth / xGap)
-        const totalPoints = Math.ceil(oHeight / yGap)
+        const xStart = (width - xGap * totalPoints) / 2
+        const yStart = (height - yGap * totalLines) / 2
 
-        const xStart = (width - xGap * totalLines) / 2
-        const yStart = (height - yGap * totalPoints) / 2
+        movedXRef.current = new Float32Array(totalPoints)
+        movedYRef.current = new Float32Array(totalPoints)
+        pathPartsRef.current = new Array(totalPoints + 1)
 
-        // Create vertical lines
         for (let i = 0; i < totalLines; i++) {
-            const points: Point[] = []
-
+            const points: Point[] = new Array(totalPoints)
             for (let j = 0; j < totalPoints; j++) {
-                const point: Point = {
-                    x: xStart + xGap * i,
-                    y: yStart + yGap * j,
-                    wave: { x: 0, y: 0 },
-                    cursor: { x: 0, y: 0, vx: 0, vy: 0 },
+                points[j] = {
+                    x: xStart + xGap * j,
+                    y: yStart + yGap * i,
+                    waveX: 0, waveY: 0,
+                    cx: 0, cy: 0, cvx: 0, cvy: 0,
                 }
-
-                points.push(point)
             }
 
-            // Create SVG path
-            const path = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'path'
-            )
-            path.classList.add('a__line')
-            path.classList.add('js-line')
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+            path.classList.add('a__line', 'js-line')
             path.setAttribute('fill', 'none')
-            path.setAttribute('stroke', strokeColor)
             path.setAttribute('stroke-width', '1')
+            path.setAttribute('opacity', '0.45')
+            path.setAttribute('stroke', getLineColor(i / Math.max(totalLines - 1, 1)))
 
             svgRef.current.appendChild(path)
             pathsRef.current.push(path)
-
-            // Add points
             linesRef.current.push(points)
         }
     }
 
-    // Resize handler
-    const onResize = () => {
-        setSize()
-        setLines()
-    }
+    const onResize = () => { setSize(); setLines() }
 
-    // Mouse handler
     const onMouseMove = (e: MouseEvent) => {
-        updateMousePosition(e.pageX, e.pageY)
-    }
-
-    // Touch handler
-    const onTouchMove = (e: TouchEvent) => {
-        e.preventDefault()
-        const touch = e.touches[0]
-        updateMousePosition(touch.clientX, touch.clientY)
-    }
-
-    // Update mouse position
-    const updateMousePosition = (x: number, y: number) => {
-        if (!boundingRef.current) return
-
         const mouse = mouseRef.current
-        mouse.x = x - boundingRef.current.left
-        mouse.y = y - boundingRef.current.top + window.scrollY
+        mouse.x = e.clientX
+        // Translate viewport clientY into container-local Y, accounting for
+        // the overspill offset and current parallax translation
+        mouse.y = e.clientY + overspillPxRef.current - parallaxCurrentRef.current
 
         if (!mouse.set) {
             mouse.sx = mouse.x
             mouse.sy = mouse.y
             mouse.lx = mouse.x
             mouse.ly = mouse.y
-
             mouse.set = true
         }
-
-        // Update CSS variables
-        if (containerRef.current) {
-            containerRef.current.style.setProperty('--x', `${mouse.sx}px`)
-            containerRef.current.style.setProperty('--y', `${mouse.sy}px`)
-        }
     }
 
-    // Move points - smoother wave motion
     const movePoints = (time: number) => {
-        const { current: lines } = linesRef
-        const { current: mouse } = mouseRef
-        const { current: noise } = noiseRef
-
+        const lines = linesRef.current
+        const mouse = mouseRef.current
+        const noise = noiseRef.current
         if (!noise) return
 
-        lines.forEach((points) => {
-            points.forEach((p: Point) => {
-                // Wave movement - reduced amplitude for smoother waves
+        const timeX = time * 0.008
+        const timeY = time * 0.003
+        const cosA = Math.cos(mouse.a)
+        const sinA = Math.sin(mouse.a)
+        const msx = mouse.sx
+        const msy = mouse.sy
+        const mvs = mouse.vs
+        const l = mvs > 175 ? mvs : 175
+        const l2 = l * l
+        const cursorInfluence = l * mvs * 0.00035
+
+        for (let i = 0; i < lines.length; i++) {
+            const points = lines[i]
+            for (let j = 0; j < points.length; j++) {
+                const p = points[j]
+
                 const move = noise(
-                    (p.x + time * 0.008) * 0.003,  // Adjusted frequency
-                    (p.y + time * 0.003) * 0.002   // Adjusted frequency
-                ) * 8  // Reduced amplitude for smoother waves
+                    (p.x + timeX) * 0.003,
+                    (p.y + timeY) * 0.002
+                ) * 8
 
-                p.wave.x = Math.cos(move) * 12  // Reduced horizontal amplitude
-                p.wave.y = Math.sin(move) * 6   // Reduced vertical amplitude
+                p.waveX = Math.cos(move) * 6
+                p.waveY = Math.sin(move) * 12
 
-                // Mouse effect - smoother response
-                const dx = p.x - mouse.sx
-                const dy = p.y - mouse.sy
-                const d = Math.hypot(dx, dy)
-                const l = Math.max(175, mouse.vs)
+                const dx = p.x - msx
+                const dy = p.y - msy
+                const d2 = dx * dx + dy * dy
 
-                if (d < l) {
+                if (d2 < l2) {
+                    const d = Math.sqrt(d2)
                     const s = 1 - d / l
                     const f = Math.cos(d * 0.001) * s
-
-                    p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * 0.00035  // Reduced influence
-                    p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * 0.00035  // Reduced influence
+                    p.cvx += cosA * f * cursorInfluence
+                    p.cvy += sinA * f * cursorInfluence
                 }
 
-                p.cursor.vx += (0 - p.cursor.x) * 0.01   // Increased restoration force
-                p.cursor.vy += (0 - p.cursor.y) * 0.01   // Increased restoration force
+                p.cvx += -p.cx * 0.01
+                p.cvy += -p.cy * 0.01
+                p.cvx *= 0.95
+                p.cvy *= 0.95
+                p.cx += p.cvx
+                p.cy += p.cvy
 
-                p.cursor.vx *= 0.95  // Increased smoothness
-                p.cursor.vy *= 0.95  // Increased smoothness
-
-                p.cursor.x += p.cursor.vx
-                p.cursor.y += p.cursor.vy
-
-                p.cursor.x = Math.min(50, Math.max(-50, p.cursor.x))  // Limited deformation range
-                p.cursor.y = Math.min(50, Math.max(-50, p.cursor.y))  // Limited deformation range
-            })
-        })
-    }
-
-    // Get moved point coordinates
-    const moved = (point: Point, withCursorForce = true) => {
-        const coords = {
-            x: point.x + point.wave.x + (withCursorForce ? point.cursor.x : 0),
-            y: point.y + point.wave.y + (withCursorForce ? point.cursor.y : 0),
+                if (p.cx > 50) p.cx = 50
+                else if (p.cx < -50) p.cx = -50
+                if (p.cy > 50) p.cy = 50
+                else if (p.cy < -50) p.cy = -50
+            }
         }
-
-        return coords
     }
 
-    // Draw lines - using line segments
     const drawLines = () => {
-        const { current: lines } = linesRef
-        const { current: paths } = pathsRef
+        const lines = linesRef.current
+        const paths = pathsRef.current
+        const movedX = movedXRef.current
+        const movedY = movedYRef.current
+        const parts = pathPartsRef.current
+        if (!movedX || !movedY) return
 
-        lines.forEach((points, lIndex) => {
-            if (points.length < 2 || !paths[lIndex]) return;
+        for (let li = 0; li < lines.length; li++) {
+            const points = lines[li]
+            const path = paths[li]
+            const n = points.length
+            if (n < 2 || !path) continue
 
-            // First point
-            const firstPoint = moved(points[0], false)
-            let d = `M ${firstPoint.x} ${firstPoint.y}`
-
-            // Connect points with lines
-            for (let i = 1; i < points.length; i++) {
-                const current = moved(points[i])
-                d += `L ${current.x} ${current.y}`
+            const p0 = points[0]
+            movedX[0] = p0.x + p0.waveX
+            movedY[0] = p0.y + p0.waveY
+            for (let j = 1; j < n; j++) {
+                const p = points[j]
+                movedX[j] = p.x + p.waveX + p.cx
+                movedY[j] = p.y + p.waveY + p.cy
             }
 
-            paths[lIndex].setAttribute('d', d)
-        })
+            const startMidX = (movedX[0] + movedX[1]) * 0.5
+            const startMidY = (movedY[0] + movedY[1]) * 0.5
+            parts[0] = `M ${movedX[0] | 0} ${movedY[0] | 0} L ${startMidX | 0} ${startMidY | 0}`
+
+            let pi = 1
+            for (let j = 1; j < n - 1; j++) {
+                const midX = (movedX[j] + movedX[j + 1]) * 0.5
+                const midY = (movedY[j] + movedY[j + 1]) * 0.5
+                parts[pi++] = `Q ${movedX[j] | 0} ${movedY[j] | 0} ${midX | 0} ${midY | 0}`
+            }
+            parts[pi++] = `L ${movedX[n - 1] | 0} ${movedY[n - 1] | 0}`
+
+            path.setAttribute('d', parts.slice(0, pi).join(' '))
+        }
     }
 
-    // Animation logic
     const tick = (time: number) => {
-        const { current: mouse } = mouseRef
+        rafRef.current = requestAnimationFrame(tick)
 
-        // Smooth mouse movement
+        const elapsed = time - lastFrameRef.current
+        if (elapsed < 1000 / 30) return
+        lastFrameRef.current = time - (elapsed % (1000 / 30))
+
+        const mouse = mouseRef.current
+
         mouse.sx += (mouse.x - mouse.sx) * 0.1
         mouse.sy += (mouse.y - mouse.sy) * 0.1
 
-        // Mouse velocity
         const dx = mouse.x - mouse.lx
         const dy = mouse.y - mouse.ly
-        const d = Math.hypot(dx, dy)
+        const d = Math.sqrt(dx * dx + dy * dy)
 
         mouse.v = d
         mouse.vs += (d - mouse.vs) * 0.1
-        mouse.vs = Math.min(100, mouse.vs)
+        if (mouse.vs > 100) mouse.vs = 100
 
-        // Previous mouse position
         mouse.lx = mouse.x
         mouse.ly = mouse.y
-
-        // Mouse angle
         mouse.a = Math.atan2(dy, dx)
 
-        // Animation
+        // Smooth hue shift and parallax — gentle lerp for a restrained, premium feel
+        hueCurrentRef.current += (hueTargetRef.current - hueCurrentRef.current) * 0.03
+        parallaxCurrentRef.current += (parallaxTargetRef.current - parallaxCurrentRef.current) * 0.06
+
         if (containerRef.current) {
-            containerRef.current.style.setProperty('--x', `${mouse.sx}px`)
-            containerRef.current.style.setProperty('--y', `${mouse.sy}px`)
+            containerRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
+            // Blur softens the 1px lines; hue-rotate handles scroll colour shift
+            containerRef.current.style.filter = `blur(0.4px) hue-rotate(${hueCurrentRef.current.toFixed(1)}deg)`
         }
 
         movePoints(time)
         drawLines()
-
-        rafRef.current = requestAnimationFrame(tick)
     }
 
     return (
         <div
             ref={containerRef}
-            className={`waves-component relative overflow-hidden ${className}`}
+            className={`waves-component ${className}`}
             style={{
                 backgroundColor,
-                position: 'absolute',
-                top: 0,
+                position: 'fixed',
+                top: 0,       // overridden by setSize
                 left: 0,
-                margin: 0,
-                padding: 0,
-                width: '100%',
-                height: '100%',
-                overflow: 'hidden',
+                right: 0,
+                height: '100vh', // overridden by setSize
+                zIndex: 0,
+                willChange: 'transform',
                 '--x': '-0.5rem',
                 '--y': '50%',
             } as React.CSSProperties}
         >
             <svg
                 ref={svgRef}
-                className="block w-full h-full js-svg"
+                className="block js-svg"
                 xmlns="http://www.w3.org/2000/svg"
-            />
-            <div
-                className="pointer-dot"
                 style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: `${pointerSize}rem`,
-                    height: `${pointerSize}rem`,
-                    background: strokeColor,
-                    borderRadius: '50%',
-                    transform: 'translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0)',
-                    willChange: 'transform',
+                    // Vignette: fades lines toward edges so the centre stays focal.
+                    // Applied to the SVG element only — the container's backgroundColor is unaffected.
+                    maskImage: 'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
+                    WebkitMaskImage: 'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
                 }}
             />
+            {pointerSize > 0 && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: `${pointerSize}rem`,
+                        height: `${pointerSize}rem`,
+                        background: 'white',
+                        borderRadius: '50%',
+                        transform: 'translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0)',
+                        willChange: 'transform',
+                    }}
+                />
+            )}
         </div>
     )
 }
