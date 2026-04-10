@@ -75,6 +75,7 @@ const Contact = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
+          className='mb-20'
         >
           <h2 className="section-title mb-4 text-center">Let's Work Together</h2>
           <p className="section-subtitle mb-16 text-center">

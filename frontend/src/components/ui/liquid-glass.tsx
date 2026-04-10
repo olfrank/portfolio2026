@@ -48,7 +48,7 @@ export const GlassEffect: React.FC<GlassEffectProps> = ({
       />
       <div
         className="absolute inset-0 z-10"
-        style={{ borderRadius: "inherit", background: "#2b2b2b70" }}
+        style={{ borderRadius: "inherit", background: "#7f7f7f30" }}
       />
       <div
         className="absolute inset-0 z-20 overflow-hidden"

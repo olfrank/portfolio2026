@@ -3,107 +3,290 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { portfolioData } from '../data/mock';
 import type { Project } from '../data/mock';
-import { ExternalLink, X, Monitor, CircleUser, Sparkles, MessageSquareText } from 'lucide-react';
+import { X, Monitor, CircleUser, Sparkles, MessageSquareText } from 'lucide-react';
 
-// ─── Card ────────────────────────────────────────────────────────────────────
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  },
+// Per-project accent colours
+const ACCENTS: Record<number, string> = {
+  1: '#4d9fff',   // CallGuard — site blue
+  2: '#bfff00',   // TRAX — lime green
+  3: '#a78bfa',   // Nous — soft violet
 };
 
-const ProjectCard = ({
-  project,
-  offset = false,
-  onClick,
-}: {
-  project: Project;
-  offset?: boolean;
-  onClick: () => void;
-}) => (
-  <motion.div
-    variants={itemVariants}
-    className="flex flex-col rounded-2xl overflow-hidden cursor-pointer"
-    style={{
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      marginTop: offset ? '3rem' : '0',
-    }}
-    whileHover={{ y: -6, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
-    onClick={onClick}
-  >
-    {/* Image area */}
+// ─── Skeleton placeholder ────────────────────────────────────────────────────
+// Suggests a real dashboard UI while product screenshots aren't available yet
+
+const UISkeleton = ({ accent }: { accent: string }) => (
+  <div className="absolute inset-0 p-5 flex flex-col gap-3 pointer-events-none select-none">
+    {/* TODO: Replace placeholder with actual product screenshot */}
+    {/* Top bar */}
+    <div className="flex items-center gap-2">
+      <div style={{ width: 48, height: 8, borderRadius: 4, background: accent, opacity: 0.18 }} />
+      <div style={{ flex: 1, height: 8, borderRadius: 4, background: 'white', opacity: 0.05 }} />
+      <div style={{ width: 28, height: 8, borderRadius: 4, background: 'white', opacity: 0.05 }} />
+    </div>
+    {/* Stat row */}
+    <div className="flex gap-2 mt-1">
+      {[1, 1, 1].map((_, i) => (
+        <div key={i} style={{ flex: 1, height: 48, borderRadius: 8, background: 'white', opacity: 0.04, border: `1px solid ${accent}22` }} />
+      ))}
+    </div>
+    {/* Chart area */}
+    <div style={{ flex: 1, borderRadius: 8, background: 'white', opacity: 0.03, border: `1px solid ${accent}18`, position: 'relative', overflow: 'hidden' }}>
+      {/* Fake chart line */}
+      <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+        <polyline
+          points="0,70 15,55 30,60 45,35 60,45 75,20 90,30 105,15 120,25 135,10 150,18"
+          fill="none"
+          stroke={accent}
+          strokeWidth="1.5"
+          opacity="0.2"
+        />
+      </svg>
+    </div>
+    {/* Row of list items */}
+    <div className="flex flex-col gap-1.5">
+      {[0.07, 0.05, 0.04].map((op, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: accent, opacity: 0.3 }} />
+          <div style={{ flex: 1, height: 7, borderRadius: 4, background: 'white', opacity: op }} />
+          <div style={{ width: 32, height: 7, borderRadius: 4, background: 'white', opacity: op * 0.7 }} />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ─── Image area shared between featured and standard cards ───────────────────
+
+const CardImage = ({ project, featured = false }: { project: Project; featured?: boolean }) => {
+  const accent = ACCENTS[project.id] ?? '#4d9fff';
+  return (
     <div
-      className="w-full overflow-hidden"
-      style={{ aspectRatio: '16/10', background: 'rgba(255,255,255,0.03)' }}
+      className="relative overflow-hidden"
+      style={{
+        background: project.bg,
+        aspectRatio: featured ? '16/9' : '16/10',
+        borderTop: `2px solid ${accent}`,
+      }}
     >
-      {project.image ? (
-        <img src={project.image} alt={project.name} className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <div
-            className="w-24 h-24 rounded-2xl opacity-10"
-            style={{ background: 'linear-gradient(135deg, var(--foreground), transparent)' }}
+      {/* Skeleton behind logo */}
+      <UISkeleton accent={accent} />
+      {/* <img
+            src={project.image}
+            alt={project.name}
+            style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: 0.9 }}
+            className='rounded-full'
+          /> */}
+
+
+      {/* Logo — small brand mark in top-left */}
+      {project.image && (
+        <div className="absolute top-4 left-4 z-10">
+          <img
+            src={project.image}
+            alt={project.name}
+            style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: 0.9 }}
+            className='rounded-full'
           />
         </div>
       )}
-    </div>
 
-    {/* Card body */}
-    <div className="px-6 py-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-4">
-        <h3 className="text-xl font-semibold leading-tight" style={{ color: 'var(--foreground)' }}>
-          {project.name}
-        </h3>
+      {/* Hover overlay + label — handled by CSS group on parent card */}
+      <div
+        className="card-img-overlay absolute inset-0 flex items-center justify-center"
+        style={{
+          background: 'rgba(0,0,0,0)',
+          transition: 'background 0.3s ease',
+        }}
+      >
         <span
-          className="shrink-0 text-sm px-3 py-1 rounded-full"
+          className="card-img-label"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            color: 'var(--foreground)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            color: accent,
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            letterSpacing: '0.02em',
+            opacity: 0,
+            transform: 'translateY(6px)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
           }}
         >
-          {project.year}
+          View Project →
         </span>
       </div>
-
-      {/* Role — sits between name and description */}
-      <p className="text-xs font-medium tracking-wide uppercase" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>
-        {project.role}
-      </p>
-
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-        {project.description}
-      </p>
-
-      <div className="flex flex-wrap gap-2 mt-1">
-        {project.techStack.map((tech, i) => (
-          <span key={i} className="tech-badge">{tech}</span>
-        ))}
-      </div>
-
-      {project.link && (
-        <a
-          href={project.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="project-link mt-2 self-start"
-          onClick={e => e.stopPropagation()}
-        >
-          View Project
-          <ExternalLink className="w-4 h-4 ml-2" />
-        </a>
-      )}
     </div>
-  </motion.div>
-);
+  );
+};
+
+// ─── Standard card ────────────────────────────────────────────────────────────
+
+const ProjectCard = ({ project, onClick }: { project: Project; onClick: () => void }) => {
+  const accent = ACCENTS[project.id] ?? '#4d9fff';
+  return (
+    <motion.div
+      className="project-card-hover flex flex-col rounded-2xl overflow-hidden cursor-pointer"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.6, ease: EASE }}
+      whileHover={{ y: -5, boxShadow: `0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px ${accent}28`, transition: { type: 'spring', stiffness: 300, damping: 22 } }}
+      onClick={onClick}
+    >
+      <CardImage project={project} />
+
+      <div className="px-5 py-5 flex flex-col gap-2.5 backdrop-blur-sm">
+        {/* Name + year */}
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="text-lg font-semibold leading-tight" style={{ color: 'var(--foreground)' }}>
+            {project.name}
+          </h3>
+          <span
+            className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium"
+            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+          >
+            {project.year}
+          </span>
+        </div>
+
+        {/* Role */}
+        <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-tertiary)' }}>
+          {project.role}
+        </p>
+
+        {/* Description — clamped to 2 lines */}
+        <p
+          className="text-sm leading-relaxed"
+          style={{
+            color: 'var(--text-secondary)',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          } as React.CSSProperties}
+        >
+          {project.description}
+        </p>
+
+        {/* Tech tags — muted, minimal */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+          {project.techStack.slice(0, 5).map((tech, i) => (
+            <span
+              key={i}
+              style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.7 }}
+            >
+              {tech}
+            </span>
+          ))}
+          {project.techStack.length > 5 && (
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.45 }}>
+              +{project.techStack.length - 5}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ─── Featured card (full-width, horizontal layout) ───────────────────────────
+
+const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => void }) => {
+  const accent = ACCENTS[project.id] ?? '#4d9fff';
+  return (
+    <motion.div
+      className="project-card-hover rounded-2xl overflow-hidden cursor-pointer"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.6, ease: EASE }}
+      whileHover={{ y: -5, boxShadow: `0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px ${accent}35`, transition: { type: 'spring', stiffness: 300, damping: 22 } }}
+      onClick={onClick}
+    >
+      {/* Horizontal on md+, stacked on mobile */}
+      <div className="flex flex-col md:flex-row">
+
+        {/* Image — 58% on desktop */}
+        <div className="md:w-[58%] shrink-0">
+          <div className="h-full" style={{ minHeight: 260 }}>
+            <CardImage project={project} featured />
+          </div>
+        </div>
+
+        {/* Details — 42% */}
+        <div className="flex flex-col justify-center gap-4 px-7 py-8 md:py-10 backdrop-blur-sm">
+          {/* Category pill */}
+          <span
+            className="self-start text-xs px-2.5 py-1 rounded-full font-medium tracking-wide uppercase"
+            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+          >
+            {project.category}
+          </span>
+
+          {/* Name + year */}
+          <div>
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-2xl font-bold leading-tight" style={{ color: 'var(--foreground)' }}>
+                {project.name}
+              </h3>
+              <span
+                className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium mt-1"
+                style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+              >
+                {project.year}
+              </span>
+            </div>
+            <p className="text-xs font-medium tracking-widest uppercase mt-1.5" style={{ color: 'var(--text-tertiary)' }}>
+              {project.role}
+            </p>
+          </div>
+
+          {/* Description — 2-line clamp */}
+          <p
+            className="text-sm leading-relaxed"
+            style={{
+              color: 'var(--text-secondary)',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            } as React.CSSProperties}
+          >
+            {project.description}
+          </p>
+
+          {/* Tech tags */}
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {project.techStack.slice(0, 6).map((tech, i) => (
+              <span key={i} style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.7 }}>
+                {tech}
+              </span>
+            ))}
+            {project.techStack.length > 6 && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.45 }}>
+                +{project.techStack.length - 6}
+              </span>
+            )}
+          </div>
+
+          {/* CTA hint */}
+          <span className="text-xs font-medium mt-1" style={{ color: accent, opacity: 0.8 }}>
+            View Project →
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 // ─── Modal ───────────────────────────────────────────────────────────────────
 
@@ -115,13 +298,11 @@ const MetaBar = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
 );
 
 const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => void }) => {
-  // Lock body scroll while open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  // Close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -147,7 +328,6 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
         style={{ background: '#ffffff', maxHeight: '90vh' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-opacity hover:opacity-60"
@@ -157,90 +337,50 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
           <X className="w-4 h-4" style={{ color: '#444' }} />
         </button>
 
-        {/* Project image */}
-        <div className="w-full" style={{ aspectRatio: '16/10', background: '#f0f0f0' }}>
-          {project.image ? (
-            <img src={project.image} alt={project.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div
-                className="w-20 h-20 rounded-2xl"
-                style={{ background: 'linear-gradient(135deg, #ccc, #e8e8e8)' }}
-              />
-            </div>
+        <div className="w-full" style={{ aspectRatio: '16/10', background: project.bg, position: 'relative' }}>
+          {project.image && (
+            <img src={project.image} alt={project.name} className="w-full h-full object-contain p-10" />
           )}
         </div>
 
-        {/* Category */}
         <div className="flex flex-col items-center gap-2.5 pt-6 pb-4 px-8">
           <Monitor className="w-5 h-5" style={{ color: '#888' }} />
-          <span
-            className="text-xs px-3 py-1 rounded-full"
-            style={{ background: '#f0f0f0', color: '#555', border: '1px solid #e0e0e0' }}
-          >
+          <span className="text-xs px-3 py-1 rounded-full" style={{ background: '#f0f0f0', color: '#555', border: '1px solid #e0e0e0' }}>
             {project.category}
           </span>
         </div>
 
-        {/* Title */}
-        <h2
-          className="text-2xl font-bold text-center px-8 pb-6 leading-tight"
-          style={{ color: '#111' }}
-        >
+        <h2 className="text-2xl font-bold text-center px-8 pb-6 leading-tight" style={{ color: '#111' }}>
           {project.name}
         </h2>
 
-        {/* Metadata bar — client + tech type */}
-        <div
-          className="grid grid-cols-2"
-          style={{
-            background: '#f5f5f5',
-            borderTop: '1px solid #e8e8e8',
-            borderBottom: '1px solid #e8e8e8',
-          }}
-        >
+        <div className="grid grid-cols-2" style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}>
           <div style={{ borderRight: '1px solid #e8e8e8' }}>
             <MetaBar icon={<CircleUser className="w-5 h-5" />} label={project.client} />
           </div>
           <MetaBar icon={<Sparkles className="w-5 h-5" />} label={project.techType} />
         </div>
 
-        {/* Full description */}
         <div className="px-8 py-8 flex flex-col gap-4">
           {project.fullDescription.split('\n\n').map((para, i) => (
-            <p key={i} className="text-sm text-center leading-relaxed" style={{ color: '#555' }}>
-              {para}
-            </p>
+            <p key={i} className="text-sm text-center leading-relaxed" style={{ color: '#555' }}>{para}</p>
           ))}
         </div>
 
-        {/* Highlights header */}
-        <div
-          className="flex flex-col items-center gap-1.5 py-5"
-          style={{
-            background: '#f5f5f5',
-            borderTop: '1px solid #e8e8e8',
-            borderBottom: '1px solid #e8e8e8',
-          }}
-        >
+        <div className="flex flex-col items-center gap-1.5 py-5" style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}>
           <MessageSquareText className="w-5 h-5" style={{ color: '#888' }} />
           <span className="text-sm font-semibold" style={{ color: '#333' }}>Project Highlights</span>
         </div>
 
-        {/* Highlights list */}
         <div className="px-8 py-6 flex flex-col gap-3">
           {project.highlights.map((h, i) => (
             <div key={i} className="flex items-start gap-3">
-              <span
-                className="shrink-0 rounded-full"
-                style={{ width: 6, height: 6, background: '#bbb', marginTop: 6 }}
-              />
+              <span className="shrink-0 rounded-full" style={{ width: 6, height: 6, background: '#bbb', marginTop: 6 }} />
               <p className="text-sm leading-relaxed" style={{ color: '#555' }}>{h}</p>
             </div>
           ))}
         </div>
 
-        {/* Bottom padding */}
         <div className="h-4" />
       </motion.div>
     </motion.div>,
@@ -253,43 +393,57 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const left  = portfolioData.projects.filter((_, i) => i % 2 === 0);
-  const right = portfolioData.projects.filter((_, i) => i % 2 !== 0);
+  const featured = portfolioData.projects[0];
+  const rest     = portfolioData.projects.slice(1);
 
   return (
     <section id="projects" className="section-padding">
+      {/* Hover overlay CSS — injected once */}
+      <style>{`
+        .project-card-hover:hover .card-img-overlay {
+          background: rgba(0,0,0,0.38) !important;
+        }
+        .project-card-hover:hover .card-img-label {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
+        }
+        .project-card-hover:hover .card-img-overlay img {
+          transform: scale(1.03);
+        }
+      `}</style>
+
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <motion.div
-          className="text-center mb-20"
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="section-title mb-4">Work</h2>
-          <p className="section-subtitle">A selection of recent products.</p>
+          <h2 className="section-title mb-4">Selected Work</h2>
+          <p className="section-subtitle">Products I've designed, built, and shipped.</p>
         </motion.div>
 
-        {/* Staggered two-column grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ staggerChildren: 0.15 }}
-        >
-          <div className="flex flex-col gap-6">
-            {left.map(p => (
-              <ProjectCard key={p.id} project={p} onClick={() => setSelectedProject(p)} />
-            ))}
-          </div>
-          <div className="flex flex-col gap-6">
-            {right.map(p => (
-              <ProjectCard key={p.id} project={p} offset onClick={() => setSelectedProject(p)} />
-            ))}
-          </div>
-        </motion.div>
+        {/* Featured card */}
+        <div className="mb-6">
+          <FeaturedCard project={featured} onClick={() => setSelectedProject(featured)} />
+        </div>
+
+        {/* Secondary cards grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {rest.map((p, i) => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, ease: EASE, delay: i * 0.15 }}
+            >
+              <ProjectCard project={p} onClick={() => setSelectedProject(p)} />
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       <AnimatePresence>

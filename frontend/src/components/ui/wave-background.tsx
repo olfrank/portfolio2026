@@ -3,10 +3,35 @@ import * as React from 'react'
 import { useEffect, useRef } from 'react'
 import { createNoise2D } from 'simplex-noise'
 
-// Background is taller than the viewport by OVERSPILL on each side so there
-// is always filled content during the parallax translation.
-const PARALLAX_FACTOR = 0.06  // background moves at 6% of scroll speed
-const OVERSPILL = 0.18        // fraction of vh to extend above and below
+const PARALLAX_FACTOR = 0.06
+const OVERSPILL = 0.18
+
+// Three colour phases keyed by scroll progress (0 → 0.5 → 1.0)
+// Each phase defines hue/saturation/lightness as a function of line position t (0–1)
+const COLOR_PHASES = [
+    // Deep blue — top of page
+    (t: number) => ({ h: 215 + t * 20, s: 40 + t * 20, l: 48 + t * 14 }),
+    // Indigo — mid scroll
+    (t: number) => ({ h: 242 + t * 12, s: 45 + t * 18, l: 50 + t * 12 }),
+    // Soft cyan — bottom of page
+    (t: number) => ({ h: 192 + t * 16, s: 42 + t * 18, l: 52 + t * 12 }),
+]
+
+const lerpColor = (t: number, progress: number): string => {
+    // Map progress (0–1) across the three phases
+    const scaled = Math.min(progress * (COLOR_PHASES.length - 1), COLOR_PHASES.length - 1 - 0.0001)
+    const idx   = Math.floor(scaled)
+    const blend = scaled - idx
+
+    const a = COLOR_PHASES[idx](t)
+    const b = COLOR_PHASES[idx + 1](t)
+
+    const h = a.h + (b.h - a.h) * blend
+    const s = a.s + (b.s - a.s) * blend
+    const l = a.l + (b.l - a.l) * blend
+
+    return `hsl(${h.toFixed(1)},${s.toFixed(1)}%,${l.toFixed(1)}%)`
+}
 
 interface Point {
     x: number
@@ -27,41 +52,35 @@ interface WavesProps {
 
 export function Waves({
     className = "",
-    backgroundColor = "#0c111d",  // deep navy — lifted slightly from pure black
+    backgroundColor = "#0c111d",
     pointerSize = 0,
 }: WavesProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const svgRef = useRef<SVGSVGElement>(null)
-    const mouseRef = useRef({
-        x: -10,
-        y: 0,
-        lx: 0,
-        ly: 0,
-        sx: 0,
-        sy: 0,
-        v: 0,
-        vs: 0,
-        a: 0,
-        set: false,
-    })
-    const pathsRef = useRef<SVGPathElement[]>([])
-    const linesRef = useRef<Point[][]>([])
-    const noiseRef = useRef<((x: number, y: number) => number) | null>(null)
-    const rafRef = useRef<number | null>(null)
+    const svgRef       = useRef<SVGSVGElement>(null)
+    const mouseRef = useRef({ x: -10, y: 0, lx: 0, ly: 0, sx: 0, sy: 0, v: 0, vs: 0, a: 0, set: false })
+    const pathsRef     = useRef<SVGPathElement[]>([])
+    const linesRef     = useRef<Point[][]>([])
+    const noiseRef     = useRef<((x: number, y: number) => number) | null>(null)
+    const rafRef       = useRef<number | null>(null)
     const lastFrameRef = useRef<number>(0)
-    const movedXRef = useRef<Float32Array | null>(null)
-    const movedYRef = useRef<Float32Array | null>(null)
+    const movedXRef    = useRef<Float32Array | null>(null)
+    const movedYRef    = useRef<Float32Array | null>(null)
     const pathPartsRef = useRef<string[]>([])
-    // Scroll-driven hue shift
-    const hueTargetRef = useRef(0)
-    const hueCurrentRef = useRef(0)
-    // Parallax translation (px, negative = shifted up)
-    const parallaxTargetRef = useRef(0)
+
+    // Parallax
+    const parallaxTargetRef  = useRef(0)
     const parallaxCurrentRef = useRef(0)
-    // Actual pixel overspill, set in setSize
-    const overspillPxRef = useRef(0)
-    // Full container dimensions (wider than viewport due to overspill height)
-    const dimsRef = useRef({ width: 0, height: 0 })
+    const overspillPxRef     = useRef(0)
+    const dimsRef            = useRef({ width: 0, height: 0 })
+
+    // Scroll-driven colour progress (0 → 1 across page)
+    const progressTargetRef  = useRef(0)
+    const progressCurrentRef = useRef(0)
+    const lastColorProgress  = useRef(-1)  // last progress value at which colours were updated
+
+    // Bounding box of #hero-title in container-local coordinates.
+    // Updated on scroll/resize; null when the element is off-screen.
+    const textBoundsRef = useRef<{ left: number; right: number; top: number; bottom: number } | null>(null)
 
     useEffect(() => {
         if (!containerRef.current || !svgRef.current) return
@@ -69,6 +88,10 @@ export function Waves({
         noiseRef.current = createNoise2D()
         setSize()
         setLines()
+
+        // Re-measure once the full page has rendered — needed on mobile where
+        // stacked content makes the page much taller than during the first paint.
+        const resizeTimer = setTimeout(() => { setSize(); setLines(); measureTextBounds() }, 200)
 
         const onVisibilityChange = () => {
             if (document.hidden) {
@@ -81,11 +104,11 @@ export function Waves({
 
         const onScroll = () => {
             parallaxTargetRef.current = -window.scrollY * PARALLAX_FACTOR
-
             const maxScroll = document.body.scrollHeight - window.innerHeight
             if (maxScroll > 0) {
-                hueTargetRef.current = (window.scrollY / maxScroll) * -20
+                progressTargetRef.current = window.scrollY / maxScroll
             }
+            measureTextBounds()
         }
 
         window.addEventListener('resize', onResize)
@@ -96,6 +119,7 @@ export function Waves({
         rafRef.current = requestAnimationFrame(tick)
 
         return () => {
+            clearTimeout(resizeTimer)
             if (rafRef.current) cancelAnimationFrame(rafRef.current)
             window.removeEventListener('resize', onResize)
             window.removeEventListener('mousemove', onMouseMove)
@@ -108,27 +132,45 @@ export function Waves({
         if (!containerRef.current || !svgRef.current) return
         const vw = window.innerWidth
         const vh = window.innerHeight
-        const overspill = Math.round(vh * OVERSPILL)
-        const containerH = vh + overspill * 2
+
+        // Overspill must cover the full parallax travel so the container's bottom
+        // edge never retreats above the viewport bottom at max scroll.
+        // travel = maxScroll × PARALLAX_FACTOR, plus a small safety buffer.
+        const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
+        const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
+        const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
+        const containerH  = vh + overspill * 2
 
         overspillPxRef.current = overspill
         dimsRef.current = { width: vw, height: containerH }
 
-        // Position container so overspill extends equally above and below viewport
-        containerRef.current.style.top = `${-overspill}px`
+        containerRef.current.style.top    = `${-overspill}px`
         containerRef.current.style.height = `${containerH}px`
-
-        svgRef.current.style.width = `${vw}px`
+        svgRef.current.style.width  = `${vw}px`
         svgRef.current.style.height = `${containerH}px`
+
+        measureTextBounds()
     }
 
-    // Tight muted spectrum: deep blue → soft indigo
-    // Low saturation and reduced lightness keeps lines unobtrusive
-    const getLineColor = (t: number): string => {
-        const h = 215 + t * 20   // 215 (deep blue) → 235 (soft indigo) — narrow range
-        const s = 18 + t * 14    // 18% → 32% — very muted
-        const l = 34 + t * 12    // 34% → 46% — dark, not luminous
-        return `hsl(${h}, ${s}%, ${l}%)`
+    // Convert the hero title's viewport rect into container-local coordinates
+    // so the repulsion math works in the same space as the wave points.
+    const measureTextBounds = () => {
+        const el = document.getElementById('hero-title')
+        if (!el) { textBoundsRef.current = null; return }
+
+        const r        = el.getBoundingClientRect()
+        const padX     = 24   // px of extra breathing room left/right
+        const padYTop  = 28   // px above the tallest ascenders
+        const padYBot  = 28   // px below the baseline — subtitle sits naturally on the waves
+        const overspill = overspillPxRef.current
+        const parallax  = parallaxCurrentRef.current
+
+        textBoundsRef.current = {
+            left:   r.left   - padX,
+            right:  r.right  + padX,
+            top:    r.top    - padYTop + overspill - parallax,
+            bottom: r.bottom + padYBot + overspill - parallax,
+        }
     }
 
     const setLines = () => {
@@ -140,22 +182,23 @@ export function Waves({
         pathsRef.current.forEach(path => path.remove())
         pathsRef.current = []
 
-        const xGap = 10
-        const yGap = 10
+        const xGap = 6
+        const yGap = 6
 
-        // Horizontal lines: iterate over y for lines, x for points
-        const totalLines = Math.ceil((height + 200) / yGap)
-        const totalPoints = Math.ceil((width + 30) / xGap)
+        const totalLines  = Math.ceil((height + 200) / yGap)
+        const totalPoints = Math.ceil((width  + 30)  / xGap)
 
-        const xStart = (width - xGap * totalPoints) / 2
-        const yStart = (height - yGap * totalLines) / 2
+        const xStart = (width  - xGap * totalPoints) / 2
+        const yStart = (height - yGap * totalLines)  / 2
 
-        movedXRef.current = new Float32Array(totalPoints)
-        movedYRef.current = new Float32Array(totalPoints)
+        movedXRef.current    = new Float32Array(totalPoints)
+        movedYRef.current    = new Float32Array(totalPoints)
         pathPartsRef.current = new Array(totalPoints + 1)
 
         for (let i = 0; i < totalLines; i++) {
+            const t = i / Math.max(totalLines - 1, 1)
             const points: Point[] = new Array(totalPoints)
+
             for (let j = 0; j < totalPoints; j++) {
                 points[j] = {
                     x: xStart + xGap * j,
@@ -169,8 +212,8 @@ export function Waves({
             path.classList.add('a__line', 'js-line')
             path.setAttribute('fill', 'none')
             path.setAttribute('stroke-width', '1')
-            path.setAttribute('opacity', '0.45')
-            path.setAttribute('stroke', getLineColor(i / Math.max(totalLines - 1, 1)))
+            path.setAttribute('opacity', '0.65')
+            path.setAttribute('stroke', lerpColor(t, 0))  // initial: phase 0 (deep blue)
 
             svgRef.current.appendChild(path)
             pathsRef.current.push(path)
@@ -178,13 +221,21 @@ export function Waves({
         }
     }
 
-    const onResize = () => { setSize(); setLines() }
+    // Update every line's stroke colour for the given scroll progress.
+    // Called only when progress has shifted enough to be worth the DOM writes.
+    const applyLineColors = (progress: number) => {
+        const paths = pathsRef.current
+        const n     = paths.length
+        for (let i = 0; i < n; i++) {
+            paths[i].setAttribute('stroke', lerpColor(i / Math.max(n - 1, 1), progress))
+        }
+    }
+
+    const onResize = () => { setSize(); setLines(); measureTextBounds() }
 
     const onMouseMove = (e: MouseEvent) => {
         const mouse = mouseRef.current
         mouse.x = e.clientX
-        // Translate viewport clientY into container-local Y, accounting for
-        // the overspill offset and current parallax translation
         mouse.y = e.clientY + overspillPxRef.current - parallaxCurrentRef.current
 
         if (!mouse.set) {
@@ -204,14 +255,20 @@ export function Waves({
 
         const timeX = time * 0.008
         const timeY = time * 0.003
-        const cosA = Math.cos(mouse.a)
-        const sinA = Math.sin(mouse.a)
-        const msx = mouse.sx
-        const msy = mouse.sy
-        const mvs = mouse.vs
-        const l = mvs > 175 ? mvs : 175
-        const l2 = l * l
+        const cosA  = Math.cos(mouse.a)
+        const sinA  = Math.sin(mouse.a)
+        const msx   = mouse.sx
+        const msy   = mouse.sy
+        const mvs   = mouse.vs
+        const l     = mvs > 175 ? mvs : 175
+        const l2    = l * l
         const cursorInfluence = l * mvs * 0.00035
+
+        // Text repulsion — hoist bounds lookup out of inner loop
+        const tb = textBoundsRef.current
+        // Feather zone: lines this far outside the box are already unaffected
+        const TEXT_FEATHER = 85   // px — width of the transition region
+        const TEXT_PUSH    = 58   // max displacement in px
 
         for (let i = 0; i < lines.length; i++) {
             const points = lines[i]
@@ -225,6 +282,38 @@ export function Waves({
 
                 p.waveX = Math.cos(move) * 6
                 p.waveY = Math.sin(move) * 12
+
+                // ── Text repulsion ─────────────────────────────────────────
+                // Works in rest-position space (p.x, p.y) so the effect is
+                // stable and doesn't feed back through the displacement itself.
+                if (tb) {
+                    // Signed distances into the bounding box on each axis.
+                    // Positive = inside the box, negative = outside.
+                    const overlapX = p.x > tb.left && p.x < tb.right
+                        ? Math.min(p.x - tb.left, tb.right  - p.x)
+                        : -(p.x < tb.left ? tb.left - p.x : p.x - tb.right)
+                    const overlapY = p.y > tb.top  && p.y < tb.bottom
+                        ? Math.min(p.y - tb.top,  tb.bottom - p.y)
+                        : -(p.y < tb.top  ? tb.top  - p.y : p.y - tb.bottom)
+
+                    // Only act when the point is inside or within feather range
+                    if (overlapX > -TEXT_FEATHER && overlapY > -TEXT_FEATHER) {
+                        // Blend factor: 0 at feather edge → 1 fully inside
+                        const fx = Math.max(0, Math.min(1, (overlapX + TEXT_FEATHER) / TEXT_FEATHER))
+                        const fy = Math.max(0, Math.min(1, (overlapY + TEXT_FEATHER) / TEXT_FEATHER))
+                        const strength = fx * fy
+
+                        if (strength > 0) {
+                            // Push away from the box centre — active both inside
+                            // the box AND in the feather zone so the displacement
+                            // tapers smoothly to zero rather than jumping to zero
+                            // at the box edge (which caused bunching / extra lines).
+                            const pushY = p.y < (tb.top + tb.bottom) * 0.5 ? -1 : 1
+                            p.waveY += pushY * strength * TEXT_PUSH
+                        }
+                    }
+                }
+                // ──────────────────────────────────────────────────────────
 
                 const dx = p.x - msx
                 const dy = p.y - msy
@@ -245,26 +334,26 @@ export function Waves({
                 p.cx += p.cvx
                 p.cy += p.cvy
 
-                if (p.cx > 50) p.cx = 50
+                if (p.cx > 50)  p.cx = 50
                 else if (p.cx < -50) p.cx = -50
-                if (p.cy > 50) p.cy = 50
+                if (p.cy > 50)  p.cy = 50
                 else if (p.cy < -50) p.cy = -50
             }
         }
     }
 
     const drawLines = () => {
-        const lines = linesRef.current
-        const paths = pathsRef.current
+        const lines  = linesRef.current
+        const paths  = pathsRef.current
         const movedX = movedXRef.current
         const movedY = movedYRef.current
-        const parts = pathPartsRef.current
+        const parts  = pathPartsRef.current
         if (!movedX || !movedY) return
 
         for (let li = 0; li < lines.length; li++) {
             const points = lines[li]
-            const path = paths[li]
-            const n = points.length
+            const path   = paths[li]
+            const n      = points.length
             if (n < 2 || !path) continue
 
             const p0 = points[0]
@@ -306,24 +395,32 @@ export function Waves({
 
         const dx = mouse.x - mouse.lx
         const dy = mouse.y - mouse.ly
-        const d = Math.sqrt(dx * dx + dy * dy)
+        const d  = Math.sqrt(dx * dx + dy * dy)
 
-        mouse.v = d
+        mouse.v   = d
         mouse.vs += (d - mouse.vs) * 0.1
         if (mouse.vs > 100) mouse.vs = 100
 
         mouse.lx = mouse.x
         mouse.ly = mouse.y
-        mouse.a = Math.atan2(dy, dx)
+        mouse.a  = Math.atan2(dy, dx)
 
-        // Smooth hue shift and parallax — gentle lerp for a restrained, premium feel
-        hueCurrentRef.current += (hueTargetRef.current - hueCurrentRef.current) * 0.03
+        // Smooth parallax
         parallaxCurrentRef.current += (parallaxTargetRef.current - parallaxCurrentRef.current) * 0.06
+
+        // Smooth colour progress — gentle lag makes the transition feel continuous
+        progressCurrentRef.current += (progressTargetRef.current - progressCurrentRef.current) * 0.04
+
+        // Only push new stroke colours when progress has shifted visibly (avoids
+        // unnecessary DOM writes on frames where nothing has changed)
+        if (Math.abs(progressCurrentRef.current - lastColorProgress.current) > 0.004) {
+            applyLineColors(progressCurrentRef.current)
+            lastColorProgress.current = progressCurrentRef.current
+        }
 
         if (containerRef.current) {
             containerRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
-            // Blur softens the 1px lines; hue-rotate handles scroll colour shift
-            containerRef.current.style.filter = `blur(0.4px) hue-rotate(${hueCurrentRef.current.toFixed(1)}deg)`
+            containerRef.current.style.filter    = 'blur(0.4px)'
         }
 
         movePoints(time)
@@ -337,14 +434,12 @@ export function Waves({
             style={{
                 backgroundColor,
                 position: 'fixed',
-                top: 0,       // overridden by setSize
+                top: 0,
                 left: 0,
                 right: 0,
-                height: '100vh', // overridden by setSize
+                height: '100vh',
                 zIndex: 0,
                 willChange: 'transform',
-                '--x': '-0.5rem',
-                '--y': '50%',
             } as React.CSSProperties}
         >
             <svg
@@ -352,9 +447,7 @@ export function Waves({
                 className="block js-svg"
                 xmlns="http://www.w3.org/2000/svg"
                 style={{
-                    // Vignette: fades lines toward edges so the centre stays focal.
-                    // Applied to the SVG element only — the container's backgroundColor is unaffected.
-                    maskImage: 'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
+                    maskImage:       'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
                     WebkitMaskImage: 'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
                 }}
             />

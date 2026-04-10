@@ -10,8 +10,8 @@ const Header = () => {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
     >
       <GlassFilter />
-      <GlassEffect className="max-w-[500px] w-full rounded-full">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-center w-full">
+      <GlassEffect className="max-w-[500px] mx-4 w-full rounded-full">
+        <div className="w-full mx-4 px-6 py-4 flex items-center justify-center w-full">
           <nav className="flex items-center gap-8">
             <a href="#" className="nav-link">OF</a>
             <a href="#projects" className="nav-link">Work</a>

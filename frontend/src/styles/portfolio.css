@@ -7,13 +7,15 @@
 :root {
   /* Light theme colors */
   --bg-primary: #fafafa;
-  --bg-secondary: #ffffff;
-  --text-primary: #1a1a1a;
-  --text-secondary: #666666;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #dbdbdb;
+  --text-secondary: #acacac;
   --text-tertiary: #999999;
   --accent-primary: #0071e3;
   --accent-secondary: #06c;
-  --glass-bg: rgba(255, 255, 255, 0.379);
+  /* Unified accent — all blue touches reference this */
+  --accent: #4d9fff;
+  --glass-bg: #00000009;
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: rgba(0, 0, 0, 0.08);
   --gradient-start: #dbeafe;
@@ -28,9 +30,11 @@
   --bg-secondary: #1a1a1a;
   --text-primary: #fafafa;
   --text-secondary: #a0a0a0;
-  --text-tertiary: #666666;
+  --text-tertiary: #777777;
   --accent-primary: #4d9fff;
-  --accent-secondary: #0088ff;
+  --accent-secondary: #6fb3ff;
+  /* Unified accent */
+  --accent: #4d9fff;
   --glass-bg: rgba(26, 26, 26, 0.396);
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-shadow: rgba(0, 0, 0, 0.4);
@@ -212,23 +216,25 @@ body {
 }
 
 .glass-button {
-  padding: 16px 40px;
+  padding: 18px 52px;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(77, 159, 255, 0.22);
   border-radius: 16px;
   cursor: pointer;
-  transition: background 0.3s ease, border 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.4s ease, color 0.2s ease;
   box-shadow: 0 8px 32px var(--glass-shadow);
 }
 
 .glass-button:hover {
-  background: var(--glass-border);
-  border-color: var(--accent-primary);
+  background: rgba(77, 159, 255, 0.08);
+  border-color: rgba(77, 159, 255, 0.55);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(77,159,255,0.2), 0 0 28px 4px rgba(77,159,255,0.12), 0 8px 32px rgba(0,0,0,0.4);
 }
 
 /* ============================================
@@ -509,7 +515,7 @@ body {
 
 .form-input:focus {
   border-color: var(--accent-primary);
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
 }
 
 .form-input::placeholder {
@@ -521,15 +527,16 @@ body {
   font-size: 1rem;
   font-weight: 600;
   color: white;
-  background: var(--accent-primary);
-  border: none;
+  background: rgba(77, 159, 255, 0.85);
+  border: 1px solid rgba(77, 159, 255, 0.4);
   border-radius: 12px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
 }
 
 .form-submit-button:hover:not(:disabled) {
-  background: var(--accent-secondary);
+  background: rgba(77, 159, 255, 1);
+  box-shadow: 0 0 0 1px rgba(77,159,255,0.3), 0 0 24px 4px rgba(77,159,255,0.18), 0 4px 16px rgba(0,0,0,0.3);
 }
 
 .form-submit-button:disabled {
