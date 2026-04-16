@@ -453,6 +453,7 @@ body {
   text-decoration: none;
   transition: background 0.3s ease, border 0.3s ease, transform 0.3s ease;
   box-shadow: 0 4px 16px var(--glass-shadow);
+  width: 100%;
 }
 
 .contact-link-card:hover {
@@ -473,6 +474,7 @@ body {
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: flex;
 }
 
 .contact-link-value {

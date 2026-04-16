@@ -11,122 +11,149 @@ const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const ACCENTS: Record<number, string> = {
   1: '#4d9fff',   // CallGuard — site blue
   2: '#bfff00',   // TRAX — lime green
-  3: '#a78bfa',   // Nous — soft violet
+  3: '#94a3b8',   // Nous — silver
+  4: '#bfff00',   // TRAX Studio — lime green
+  5: '#bfff00',   // TRAX Links — lime green
 };
 
-// ─── Skeleton placeholder ────────────────────────────────────────────────────
-// Suggests a real dashboard UI while product screenshots aren't available yet
+// ─── Slideshow ────────────────────────────────────────────────────────────────
+// Shared image area for all cards and the modal.
+// - Auto-cycles every 5s, pauses on hover
+// - Smooth crossfade between slides
+// - Dot indicators; clicking a dot jumps to that slide
+// - All images except the first are lazy-loaded
 
-const UISkeleton = ({ accent }: { accent: string }) => (
-  <div className="absolute inset-0 p-5 flex flex-col gap-3 pointer-events-none select-none">
-    {/* TODO: Replace placeholder with actual product screenshot */}
-    {/* Top bar */}
-    <div className="flex items-center gap-2">
-      <div style={{ width: 48, height: 8, borderRadius: 4, background: accent, opacity: 0.18 }} />
-      <div style={{ flex: 1, height: 8, borderRadius: 4, background: 'white', opacity: 0.05 }} />
-      <div style={{ width: 28, height: 8, borderRadius: 4, background: 'white', opacity: 0.05 }} />
-    </div>
-    {/* Stat row */}
-    <div className="flex gap-2 mt-1">
-      {[1, 1, 1].map((_, i) => (
-        <div key={i} style={{ flex: 1, height: 48, borderRadius: 8, background: 'white', opacity: 0.04, border: `1px solid ${accent}22` }} />
-      ))}
-    </div>
-    {/* Chart area */}
-    <div style={{ flex: 1, borderRadius: 8, background: 'white', opacity: 0.03, border: `1px solid ${accent}18`, position: 'relative', overflow: 'hidden' }}>
-      {/* Fake chart line */}
-      <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-        <polyline
-          points="0,70 15,55 30,60 45,35 60,45 75,20 90,30 105,15 120,25 135,10 150,18"
-          fill="none"
-          stroke={accent}
-          strokeWidth="1.5"
-          opacity="0.2"
-        />
-      </svg>
-    </div>
-    {/* Row of list items */}
-    <div className="flex flex-col gap-1.5">
-      {[0.07, 0.05, 0.04].map((op, i) => (
-        <div key={i} className="flex gap-2 items-center">
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: accent, opacity: 0.3 }} />
-          <div style={{ flex: 1, height: 7, borderRadius: 4, background: 'white', opacity: op }} />
-          <div style={{ width: 32, height: 7, borderRadius: 4, background: 'white', opacity: op * 0.7 }} />
-        </div>
-      ))}
-    </div>
-  </div>
-);
+const Slideshow = ({
+  images,
+  bg,
+  accent,
+  featured = false,
+  isModal = false,
+}: {
+  images: string[];
+  bg: string;
+  accent: string;
+  featured?: boolean;
+  isModal?: boolean;
+}) => {
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
 
-// ─── Image area shared between featured and standard cards ───────────────────
+  useEffect(() => {
+    if (images.length <= 1 || paused) return;
+    const id = setInterval(() => setCurrent(c => (c + 1) % images.length), 5000);
+    return () => clearInterval(id);
+  }, [images.length, paused]);
 
-const CardImage = ({ project, featured = false }: { project: Project; featured?: boolean }) => {
-  const accent = ACCENTS[project.id] ?? '#4d9fff';
+  // Reset to first slide when images change (e.g. different modal opened)
+  useEffect(() => { setCurrent(0); }, [images]);
+
   return (
     <div
       className="relative overflow-hidden"
       style={{
-        background: project.bg,
-        aspectRatio: featured ? '16/9' : '16/10',
-        borderTop: `2px solid ${accent}`,
+        background: bg,
+        aspectRatio: isModal ? '16/10' : featured ? '16/9' : '16/10',
+        borderTop: isModal ? 'none' : `2px solid ${accent}`,
       }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
     >
-      {/* Skeleton behind logo */}
-      <UISkeleton accent={accent} />
-      {/* <img
-            src={project.image}
-            alt={project.name}
-            style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: 0.9 }}
-            className='rounded-full'
-          /> */}
+      {images.map((src, i) => (
+        <img
+          key={src}
+          src={src}
+          alt={`Screenshot ${i + 1}`}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'top',
+            opacity: i === current ? 1 : 0,
+            transition: 'opacity 0.5s ease',
+          }}
+        />
+      ))}
 
-
-      {/* Logo — small brand mark in top-left */}
-      {project.image && (
-        <div className="absolute top-4 left-4 z-10">
-          <img
-            src={project.image}
-            alt={project.name}
-            style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: 0.9 }}
-            className='rounded-full'
-          />
+      {/* Dot indicators — only when more than one image */}
+      {images.length > 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 6,
+            zIndex: 20,
+          }}
+        >
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={e => { e.stopPropagation(); setCurrent(i); }}
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: i === current ? accent : 'rgba(255,255,255,0.3)',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                transition: 'background 0.3s ease',
+                flexShrink: 0,
+              }}
+              aria-label={`Go to image ${i + 1}`}
+            />
+          ))}
         </div>
       )}
 
-      {/* Hover overlay + label — handled by CSS group on parent card */}
-      <div
-        className="card-img-overlay absolute inset-0 flex items-center justify-center"
-        style={{
-          background: 'rgba(0,0,0,0)',
-          transition: 'background 0.3s ease',
-        }}
-      >
-        <span
-          className="card-img-label"
-          style={{
-            color: accent,
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            letterSpacing: '0.02em',
-            opacity: 0,
-            transform: 'translateY(6px)',
-            transition: 'opacity 0.3s ease, transform 0.3s ease',
-          }}
+      {/* Hover overlay — card only, not modal */}
+      {!isModal && (
+        <div
+          className="card-img-overlay absolute inset-0 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0)', transition: 'background 0.3s ease', zIndex: 10 }}
         >
-          View Project →
-        </span>
-      </div>
+          <span
+            className="card-img-label"
+            style={{
+              color: accent,
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              letterSpacing: '0.02em',
+              opacity: 0,
+              transform: 'translateY(6px)',
+              transition: 'opacity 0.3s ease, transform 0.3s ease',
+            }}
+          >
+            View Project →
+          </span>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── Standard card ────────────────────────────────────────────────────────────
 
-const ProjectCard = ({ project, onClick }: { project: Project; onClick: () => void }) => {
+const ProjectCard = ({
+  project,
+  onClick,
+  delay = 0,
+}: {
+  project: Project;
+  onClick: () => void;
+  delay?: number;
+}) => {
   const accent = ACCENTS[project.id] ?? '#4d9fff';
   return (
     <motion.div
-      className="project-card-hover flex flex-col rounded-2xl overflow-hidden cursor-pointer"
+      className="project-card-hover flex flex-col rounded-2xl overflow-hidden cursor-pointer h-full"
       style={{
         background: 'rgba(255,255,255,0.04)',
         border: '1px solid rgba(255,255,255,0.08)',
@@ -134,13 +161,21 @@ const ProjectCard = ({ project, onClick }: { project: Project; onClick: () => vo
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.6, ease: EASE }}
+      transition={{ duration: 0.6, ease: EASE, delay }}
       whileHover={{ y: -5, boxShadow: `0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px ${accent}28`, transition: { type: 'spring', stiffness: 300, damping: 22 } }}
       onClick={onClick}
     >
-      <CardImage project={project} />
+      <Slideshow images={project.images} bg={project.bg} accent={accent} />
 
       <div className="px-5 py-5 flex flex-col gap-2.5 backdrop-blur-sm">
+        {/* Category badge */}
+        <span
+          className="self-start text-xs px-2.5 py-1 rounded-full font-medium tracking-wide uppercase"
+          style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+        >
+          {project.category}
+        </span>
+
         {/* Name + year */}
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-lg font-semibold leading-tight" style={{ color: 'var(--foreground)' }}>
@@ -165,7 +200,7 @@ const ProjectCard = ({ project, onClick }: { project: Project; onClick: () => vo
           style={{
             color: 'var(--text-secondary)',
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 4,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
           } as React.CSSProperties}
@@ -173,13 +208,10 @@ const ProjectCard = ({ project, onClick }: { project: Project; onClick: () => vo
           {project.description}
         </p>
 
-        {/* Tech tags — muted, minimal */}
+        {/* Tech tags */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
           {project.techStack.slice(0, 5).map((tech, i) => (
-            <span
-              key={i}
-              style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.7 }}
-            >
+            <span key={i} style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.7 }}>
               {tech}
             </span>
           ))}
@@ -217,9 +249,7 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
 
         {/* Image — 58% on desktop */}
         <div className="md:w-[58%] shrink-0">
-          <div className="h-full" style={{ minHeight: 260 }}>
-            <CardImage project={project} featured />
-          </div>
+          <Slideshow images={project.images} bg={project.bg} accent={accent} featured />
         </div>
 
         {/* Details — 42% */}
@@ -250,13 +280,13 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
             </p>
           </div>
 
-          {/* Description — 2-line clamp */}
+          {/* Description */}
           <p
             className="text-sm leading-relaxed"
             style={{
               color: 'var(--text-secondary)',
               display: '-webkit-box',
-              WebkitLineClamp: 3,
+              WebkitLineClamp: 5,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             } as React.CSSProperties}
@@ -298,6 +328,8 @@ const MetaBar = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
 );
 
 const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => void }) => {
+  const accent = ACCENTS[project.id] ?? '#4d9fff';
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
@@ -337,15 +369,15 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
           <X className="w-4 h-4" style={{ color: '#444' }} />
         </button>
 
-        <div className="w-full" style={{ aspectRatio: '16/10', background: project.bg, position: 'relative' }}>
-          {project.image && (
-            <img src={project.image} alt={project.name} className="w-full h-full object-contain p-10" />
-          )}
-        </div>
+        {/* Image gallery */}
+        <Slideshow images={project.images} bg={project.bg} accent={accent} isModal />
 
         <div className="flex flex-col items-center gap-2.5 pt-6 pb-4 px-8">
           <Monitor className="w-5 h-5" style={{ color: '#888' }} />
-          <span className="text-xs px-3 py-1 rounded-full" style={{ background: '#f0f0f0', color: '#555', border: '1px solid #e0e0e0' }}>
+          <span
+            className="text-xs px-3 py-1 rounded-full uppercase tracking-wide font-medium"
+            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+          >
             {project.category}
           </span>
         </div>
@@ -375,7 +407,10 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
         <div className="px-8 py-6 flex flex-col gap-3">
           {project.highlights.map((h, i) => (
             <div key={i} className="flex items-start gap-3">
-              <span className="shrink-0 rounded-full" style={{ width: 6, height: 6, background: '#bbb', marginTop: 6 }} />
+              <span
+                className="shrink-0 rounded-full mt-1.5"
+                style={{ width: 6, height: 6, background: accent, opacity: 0.6 }}
+              />
               <p className="text-sm leading-relaxed" style={{ color: '#555' }}>{h}</p>
             </div>
           ))}
@@ -393,12 +428,13 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const featured = portfolioData.projects[0];
-  const rest     = portfolioData.projects.slice(1);
+  const [featured, ...rest] = portfolioData.projects;
+  const row2 = rest.slice(0, 2); // TRAX Studio, TRAX Links
+  const row3 = rest.slice(2, 4); // CallGuard, Nous
 
   return (
     <section id="projects" className="section-padding">
-      {/* Hover overlay CSS — injected once */}
+      {/* Hover overlay CSS */}
       <style>{`
         .project-card-hover:hover .card-img-overlay {
           background: rgba(0,0,0,0.38) !important;
@@ -406,9 +442,6 @@ const Projects = () => {
         .project-card-hover:hover .card-img-label {
           opacity: 1 !important;
           transform: translateY(0) !important;
-        }
-        .project-card-hover:hover .card-img-overlay img {
-          transform: scale(1.03);
         }
       `}</style>
 
@@ -425,23 +458,32 @@ const Projects = () => {
           <p className="section-subtitle">Products I've designed, built, and shipped.</p>
         </motion.div>
 
-        {/* Featured card */}
+        {/* Row 1: Featured */}
         <div className="mb-6">
           <FeaturedCard project={featured} onClick={() => setSelectedProject(featured)} />
         </div>
 
-        {/* Secondary cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {rest.map((p, i) => (
-            <motion.div
+        {/* Row 2: TRAX Studio + TRAX Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {row2.map((p, i) => (
+            <ProjectCard
               key={p.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.6, ease: EASE, delay: i * 0.15 }}
-            >
-              <ProjectCard project={p} onClick={() => setSelectedProject(p)} />
-            </motion.div>
+              project={p}
+              delay={i * 0.15}
+              onClick={() => setSelectedProject(p)}
+            />
+          ))}
+        </div>
+
+        {/* Row 3: CallGuard + Nous */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {row3.map((p, i) => (
+            <ProjectCard
+              key={p.id}
+              project={p}
+              delay={i * 0.15}
+              onClick={() => setSelectedProject(p)}
+            />
           ))}
         </div>
       </div>

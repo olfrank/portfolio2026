@@ -55,7 +55,8 @@ const About = () => (
       >
         <div
           style={{
-            background: 'rgba(12,14,22,0.92)',
+            background: '#ffffff09',
+            backdropFilter: "blur(10px)",
             borderRadius: '31px',
             padding: 'clamp(2rem, 5vw, 3.5rem)',
             boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 24px 64px rgba(0,0,0,0.5)',

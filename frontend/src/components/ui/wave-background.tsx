@@ -1,6 +1,6 @@
 'use client'
 import * as React from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { createNoise2D } from 'simplex-noise'
 
 const PARALLAX_FACTOR = 0.06
@@ -82,6 +82,80 @@ export function Waves({
     // Updated on scroll/resize; null when the element is off-screen.
     const textBoundsRef = useRef<{ left: number; right: number; top: number; bottom: number } | null>(null)
 
+
+    const setSize = useCallback(() => {
+        if (!containerRef.current || !svgRef.current) return
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+
+        // Overspill must cover the full parallax travel so the container's bottom
+        // edge never retreats above the viewport bottom at max scroll.
+        // travel = maxScroll × PARALLAX_FACTOR, plus a small safety buffer.
+        const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
+        const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
+        const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
+        const containerH  = vh + overspill * 2
+
+        overspillPxRef.current = overspill
+        dimsRef.current = { width: vw, height: containerH }
+
+        containerRef.current.style.top    = `${-overspill}px`
+        containerRef.current.style.height = `${containerH}px`
+        svgRef.current.style.width  = `${vw}px`
+        svgRef.current.style.height = `${containerH}px`
+
+        measureTextBounds()
+    },[])
+
+    const onResize = useCallback(() => { setSize(); setLines(); measureTextBounds() }, [setSize])
+
+
+       const tick = useCallback((time: number) => {
+        rafRef.current = requestAnimationFrame(tick)
+
+        const elapsed = time - lastFrameRef.current
+        if (elapsed < 1000 / 30) return
+        lastFrameRef.current = time - (elapsed % (1000 / 30))
+
+        const mouse = mouseRef.current
+
+        mouse.sx += (mouse.x - mouse.sx) * 0.1
+        mouse.sy += (mouse.y - mouse.sy) * 0.1
+
+        const dx = mouse.x - mouse.lx
+        const dy = mouse.y - mouse.ly
+        const d  = Math.sqrt(dx * dx + dy * dy)
+
+        mouse.v   = d
+        mouse.vs += (d - mouse.vs) * 0.1
+        if (mouse.vs > 100) mouse.vs = 100
+
+        mouse.lx = mouse.x
+        mouse.ly = mouse.y
+        mouse.a  = Math.atan2(dy, dx)
+
+        // Smooth parallax
+        parallaxCurrentRef.current += (parallaxTargetRef.current - parallaxCurrentRef.current) * 0.06
+
+        // Smooth colour progress — gentle lag makes the transition feel continuous
+        progressCurrentRef.current += (progressTargetRef.current - progressCurrentRef.current) * 0.04
+
+        // Only push new stroke colours when progress has shifted visibly (avoids
+        // unnecessary DOM writes on frames where nothing has changed)
+        if (Math.abs(progressCurrentRef.current - lastColorProgress.current) > 0.004) {
+            applyLineColors(progressCurrentRef.current)
+            lastColorProgress.current = progressCurrentRef.current
+        }
+
+        if (containerRef.current) {
+            containerRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
+            containerRef.current.style.filter    = 'blur(0.4px)'
+        }
+
+        movePoints(time)
+        drawLines()
+    }, [])
+
     useEffect(() => {
         if (!containerRef.current || !svgRef.current) return
 
@@ -126,31 +200,12 @@ export function Waves({
             window.removeEventListener('scroll', onScroll)
             document.removeEventListener('visibilitychange', onVisibilityChange)
         }
-    }, [])
+    }, [onResize, setSize, tick])
 
-    const setSize = () => {
-        if (!containerRef.current || !svgRef.current) return
-        const vw = window.innerWidth
-        const vh = window.innerHeight
 
-        // Overspill must cover the full parallax travel so the container's bottom
-        // edge never retreats above the viewport bottom at max scroll.
-        // travel = maxScroll × PARALLAX_FACTOR, plus a small safety buffer.
-        const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
-        const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
-        const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
-        const containerH  = vh + overspill * 2
+    
 
-        overspillPxRef.current = overspill
-        dimsRef.current = { width: vw, height: containerH }
-
-        containerRef.current.style.top    = `${-overspill}px`
-        containerRef.current.style.height = `${containerH}px`
-        svgRef.current.style.width  = `${vw}px`
-        svgRef.current.style.height = `${containerH}px`
-
-        measureTextBounds()
-    }
+    
 
     // Convert the hero title's viewport rect into container-local coordinates
     // so the repulsion math works in the same space as the wave points.
@@ -231,7 +286,6 @@ export function Waves({
         }
     }
 
-    const onResize = () => { setSize(); setLines(); measureTextBounds() }
 
     const onMouseMove = (e: MouseEvent) => {
         const mouse = mouseRef.current
@@ -381,51 +435,7 @@ export function Waves({
         }
     }
 
-    const tick = (time: number) => {
-        rafRef.current = requestAnimationFrame(tick)
-
-        const elapsed = time - lastFrameRef.current
-        if (elapsed < 1000 / 30) return
-        lastFrameRef.current = time - (elapsed % (1000 / 30))
-
-        const mouse = mouseRef.current
-
-        mouse.sx += (mouse.x - mouse.sx) * 0.1
-        mouse.sy += (mouse.y - mouse.sy) * 0.1
-
-        const dx = mouse.x - mouse.lx
-        const dy = mouse.y - mouse.ly
-        const d  = Math.sqrt(dx * dx + dy * dy)
-
-        mouse.v   = d
-        mouse.vs += (d - mouse.vs) * 0.1
-        if (mouse.vs > 100) mouse.vs = 100
-
-        mouse.lx = mouse.x
-        mouse.ly = mouse.y
-        mouse.a  = Math.atan2(dy, dx)
-
-        // Smooth parallax
-        parallaxCurrentRef.current += (parallaxTargetRef.current - parallaxCurrentRef.current) * 0.06
-
-        // Smooth colour progress — gentle lag makes the transition feel continuous
-        progressCurrentRef.current += (progressTargetRef.current - progressCurrentRef.current) * 0.04
-
-        // Only push new stroke colours when progress has shifted visibly (avoids
-        // unnecessary DOM writes on frames where nothing has changed)
-        if (Math.abs(progressCurrentRef.current - lastColorProgress.current) > 0.004) {
-            applyLineColors(progressCurrentRef.current)
-            lastColorProgress.current = progressCurrentRef.current
-        }
-
-        if (containerRef.current) {
-            containerRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
-            containerRef.current.style.filter    = 'blur(0.4px)'
-        }
-
-        movePoints(time)
-        drawLines()
-    }
+ 
 
     return (
         <div
