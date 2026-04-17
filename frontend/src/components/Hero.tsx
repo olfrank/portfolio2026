@@ -11,7 +11,6 @@ const Hero = () => {
   const { scrollY } = useScroll();
   const scrollOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
-  // Magnetic button — spring-driven offset
   const btnX = useMotionValue(0);
   const btnY = useMotionValue(0);
   const btnSpringX = useSpring(btnX, { stiffness: 180, damping: 18 });
@@ -64,9 +63,10 @@ const Hero = () => {
         <motion.h1
           id="hero-title"
           style={{
+            fontFamily: 'var(--font-serif)',
             fontSize: 'clamp(3.5rem, 11vw, 8rem)',
-            fontWeight: 800,
-            letterSpacing: '-0.04em',
+            fontWeight: 400,
+            letterSpacing: '-0.02em',
             lineHeight: 1.0,
             marginBottom: '1.5rem',
             background: 'linear-gradient(158deg, #dbdbdb 25%, rgba(190,215,255,0.93) 65%, rgba(155,190,255,0.86) 100%)',
@@ -88,7 +88,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE, delay: 0.2 }}
         >
-          Senior Product Engineer
+          {portfolioData.personal.title}
         </motion.p>
 
         {/* Tagline */}

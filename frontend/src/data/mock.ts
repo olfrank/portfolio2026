@@ -40,8 +40,8 @@ export interface PortfolioData {
 export const portfolioData: PortfolioData = {
   personal: {
     name: "Ollie Francis",
-    title: "Product-focused Front-End Engineer",
-    tagline: "Design-led engineering for modern products.",
+    title: "Senior Product Engineer",
+    tagline: "Co-founded TRAX, scaling it to 1,500 artists, 50,000 fans across 75 countries. Bringing the same product instincts to your team.",
     bio: "I'm a product-focused front-end engineer with a strong eye for design and a deep appreciation for detail, motion, and performance. I enjoy building interfaces that feel calm, intuitive, and refined, and I care as much about how something feels as how it functions. My work sits at the intersection of design, engineering, and product thinking.",
     email: "olliefrancis97@hotmail.co.uk",
     linkedin: "https://www.linkedin.com/in/ollie--francis/",
@@ -72,7 +72,7 @@ export const portfolioData: PortfolioData = {
       client: "TRAX (Venture-Backed)",
       category: "D2F Music Platform",
       techType: "Web & iOS Engineering",
-      fullDescription: "TRAX is a direct-to-fan music platform built to give artists true ownership of how their music is distributed, experienced, and monetised — without the gatekeeping of traditional streaming services. As Co-Founder and CTO, I owned the entire front-end codebase across web and native iOS while managing a team of three engineers through the full product lifecycle.\n\nThe platform was built in Next.js and React, with Capacitor providing native iOS deployment from a shared codebase. Audio playback was engineered using the Web Audio API to support gapless transitions and visualisation. On-chain ownership of content was recorded via Motoko smart contracts on the Internet Computer Protocol (ICP), with the Node.js backend bridging web2 infrastructure and the decentralised layer.",
+      fullDescription: "TRAX is a direct-to-fan music platform built to give artists true ownership of how their music is distributed, experienced, and monetised, without the gatekeeping of traditional streaming services. As Co-Founder and CTO, I owned the entire front-end codebase across web and native iOS while managing a team of three engineers through the full product lifecycle.\n\nThe platform was built in Next.js and React, with Capacitor providing native iOS deployment from a shared codebase. Audio playback was engineered using the Web Audio API to support gapless transitions and visualisation. On-chain ownership of content was recorded via Motoko smart contracts on the Internet Computer Protocol (ICP), with the Node.js backend bridging web2 infrastructure and the decentralised layer.",
       highlights: [
         "Led engineering across web and iOS from pre-seed through to venture-backed growth",
         "Managed and mentored a team of three engineers across front-end and backend",
@@ -100,7 +100,7 @@ export const portfolioData: PortfolioData = {
       client: "TRAX (Internal)",
       category: "Internal Tool",
       techType: "Full-Stack Development",
-      fullDescription: "TRAX Studio is the internal administration platform powering the entire TRAX music ecosystem. Built as a single-page dashboard for use by the TRAX team, it provides comprehensive tools for managing artists, content, users, subscriptions, and platform-wide analytics in one place.\n\nThe dashboard features role-based access control, real-time revenue tracking, and batch content management tools — reducing operational overhead and giving the team full visibility over platform health. Built in React and TypeScript with a PostgreSQL backend and REST API.",
+      fullDescription: "TRAX Studio is the internal administration platform powering the entire TRAX music ecosystem. Built as a single-page dashboard for use by the TRAX team, it provides comprehensive tools for managing artists, content, users, subscriptions, and platform-wide analytics in one place.\n\nThe dashboard features role-based access control, real-time revenue tracking, and batch content management tools, reducing operational overhead and giving the team full visibility over platform health. Built in React and TypeScript with a PostgreSQL backend and REST API.",
       highlights: [
         "Full-featured admin dashboard for managing artists, content, users, and subscriptions",
         "Role-based access control with distinct admin and support-level permissions",
@@ -126,7 +126,7 @@ export const portfolioData: PortfolioData = {
       client: "Personal Project",
       category: "Consumer Product",
       techType: "Full-Stack Development",
-      fullDescription: "Linx is a customisable link-in-bio product designed and built as an independent project. It enables musicians to consolidate their entire online presence — streaming links, social profiles, and release content — on a single branded, mobile-first page.\n\nAfter proving the concept independently, Linx was integrated into the TRAX platform, giving every artist on the platform a fully customisable landing page with colour themes, background imagery, and automatic deep-linking to their TRAX content.\n\nBuilt end-to-end in Next.js with a Tailwind CSS design system, with a focus on performance, mobile responsiveness, and smooth micro-interactions throughout.",
+      fullDescription: "Linx is a customisable link-in-bio product designed and built as an independent project. It enables musicians to consolidate their entire online presence, streaming links, social profiles, and release content, on a single branded, mobile-first page.\n\nAfter proving the concept independently, Linx was integrated into the TRAX platform, giving every artist on the platform a fully customisable landing page with colour themes, background imagery, and automatic deep-linking to their TRAX content.\n\nBuilt end-to-end in Next.js with a Tailwind CSS design system, with a focus on performance, mobile responsiveness, and smooth micro-interactions throughout.",
       highlights: [
         "Built independently as a personal project, then adopted into the TRAX platform",
         "Fully customisable artist pages with branded colour themes and background imagery",
@@ -140,7 +140,7 @@ export const portfolioData: PortfolioData = {
       id: 1,
       name: "CallGuard",
       role: "Solo Developer",
-      description: "Designed, built, and deployed a full-stack SaaS platform that automates missed-call handling for UK tradespeople — from system architecture through to production release.",
+      description: "Designed, built, and deployed a full-stack SaaS platform that automates missed-call handling for UK tradespeople, from system architecture through to production release.",
       techStack: ["React", "TypeScript", "Node.js", "Express.js", "PostgreSQL", "REST API"],
       link: null,
       year: "2026",
@@ -151,7 +151,7 @@ export const portfolioData: PortfolioData = {
       client: "Solo Project",
       category: "SaaS Product",
       techType: "Full-Stack Development",
-      fullDescription: "CallGuard automates missed-call handling for UK tradespeople — whenever a call goes unanswered, the platform instantly fires an SMS reply with a personalised message and booking link. The product was designed, architected, built, and launched entirely solo, from the first line of code through to production deployment.\n\nThe backend runs on Node.js and Express with a PostgreSQL database, integrating Twilio webhooks to intercept missed calls and trigger automated responses. The front-end dashboard — built in React and TypeScript — gives business owners full visibility over call activity, control over their auto-reply sequences, and simple customisation without any technical knowledge required.",
+      fullDescription: "CallGuard automates missed-call handling for UK tradespeople, whenever a call goes unanswered, the platform instantly fires an SMS reply with a personalised message and booking link. The product was designed, architected, built, and launched entirely solo, from the first line of code through to production deployment.\n\nThe backend runs on Node.js and Express with a PostgreSQL database, integrating Twilio webhooks to intercept missed calls and trigger automated responses. The front-end dashboard, built in React and TypeScript, gives business owners full visibility over call activity, control over their auto-reply sequences, and simple customisation without any technical knowledge required.",
       highlights: [
         "Designed, built, and shipped end-to-end as a solo founder",
         "Twilio integration for real-time missed-call detection and automated SMS dispatch",
@@ -177,7 +177,7 @@ export const portfolioData: PortfolioData = {
       client: "Nous Protocol",
       category: "Web3 Platform",
       techType: "Web3 Development",
-      fullDescription: "Nous is a decentralised hedge fund protocol that offers investors fixed and variable rate returns, with yields generated by an underlying algorithmic trading system. The project spanned both smart contract development and the front-end trading dashboard, requiring tight coordination between on-chain logic and the user-facing interface.\n\nSolidity contracts govern the investment vaults — users can enter a fixed-rate product with predictable returns, or opt into a variable-rate vault where yield tracks live trading performance. The front-end, built in Next.js and TypeScript, surfaces real-time position data and portfolio metrics with smooth Framer Motion transitions throughout.",
+      fullDescription: "Nous is a decentralised hedge fund protocol that offers investors fixed and variable rate returns, with yields generated by an underlying algorithmic trading system. The project spanned both smart contract development and the front-end trading dashboard, requiring tight coordination between on-chain logic and the user-facing interface.\n\nSolidity contracts govern the investment vaults, users can enter a fixed-rate product with predictable returns, or opt into a variable-rate vault where yield tracks live trading performance. The front-end, built in Next.js and TypeScript, surfaces real-time position data and portfolio metrics with smooth Framer Motion transitions throughout.",
       highlights: [
         "Solidity smart contracts for fixed and variable rate investment vaults on EVM networks",
         "Front-end trading dashboard built in Next.js with real-time on-chain data feeds",

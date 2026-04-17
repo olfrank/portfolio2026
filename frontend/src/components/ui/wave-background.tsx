@@ -6,19 +6,16 @@ import { createNoise2D } from 'simplex-noise'
 const PARALLAX_FACTOR = 0.06
 const OVERSPILL = 0.18
 
-// Three colour phases keyed by scroll progress (0 → 0.5 → 1.0)
-// Each phase defines hue/saturation/lightness as a function of line position t (0–1)
 const COLOR_PHASES = [
-    // Deep blue — top of page
+    // Deep blue top of page
     (t: number) => ({ h: 215 + t * 20, s: 40 + t * 20, l: 48 + t * 14 }),
-    // Indigo — mid scroll
+    // Indigo mid scroll
     (t: number) => ({ h: 242 + t * 12, s: 45 + t * 18, l: 50 + t * 12 }),
-    // Soft cyan — bottom of page
+    // Soft cyan bottom of page
     (t: number) => ({ h: 192 + t * 16, s: 42 + t * 18, l: 52 + t * 12 }),
 ]
 
 const lerpColor = (t: number, progress: number): string => {
-    // Map progress (0–1) across the three phases
     const scaled = Math.min(progress * (COLOR_PHASES.length - 1), COLOR_PHASES.length - 1 - 0.0001)
     const idx   = Math.floor(scaled)
     const blend = scaled - idx
@@ -76,10 +73,8 @@ export function Waves({
     // Scroll-driven colour progress (0 → 1 across page)
     const progressTargetRef  = useRef(0)
     const progressCurrentRef = useRef(0)
-    const lastColorProgress  = useRef(-1)  // last progress value at which colours were updated
+    const lastColorProgress  = useRef(-1)  
 
-    // Bounding box of #hero-title in container-local coordinates.
-    // Updated on scroll/resize; null when the element is off-screen.
     const textBoundsRef = useRef<{ left: number; right: number; top: number; bottom: number } | null>(null)
 
 
@@ -88,9 +83,6 @@ export function Waves({
         const vw = window.innerWidth
         const vh = window.innerHeight
 
-        // Overspill must cover the full parallax travel so the container's bottom
-        // edge never retreats above the viewport bottom at max scroll.
-        // travel = maxScroll × PARALLAX_FACTOR, plus a small safety buffer.
         const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
         const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
         const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
@@ -134,14 +126,10 @@ export function Waves({
         mouse.ly = mouse.y
         mouse.a  = Math.atan2(dy, dx)
 
-        // Smooth parallax
         parallaxCurrentRef.current += (parallaxTargetRef.current - parallaxCurrentRef.current) * 0.06
 
-        // Smooth colour progress — gentle lag makes the transition feel continuous
         progressCurrentRef.current += (progressTargetRef.current - progressCurrentRef.current) * 0.04
 
-        // Only push new stroke colours when progress has shifted visibly (avoids
-        // unnecessary DOM writes on frames where nothing has changed)
         if (Math.abs(progressCurrentRef.current - lastColorProgress.current) > 0.004) {
             applyLineColors(progressCurrentRef.current)
             lastColorProgress.current = progressCurrentRef.current
@@ -163,8 +151,6 @@ export function Waves({
         setSize()
         setLines()
 
-        // Re-measure once the full page has rendered — needed on mobile where
-        // stacked content makes the page much taller than during the first paint.
         const resizeTimer = setTimeout(() => { setSize(); setLines(); measureTextBounds() }, 200)
 
         const onVisibilityChange = () => {
@@ -207,8 +193,6 @@ export function Waves({
 
     
 
-    // Convert the hero title's viewport rect into container-local coordinates
-    // so the repulsion math works in the same space as the wave points.
     const measureTextBounds = () => {
         const el = document.getElementById('hero-title')
         if (!el) { textBoundsRef.current = null; return }
@@ -216,7 +200,7 @@ export function Waves({
         const r        = el.getBoundingClientRect()
         const padX     = 24   // px of extra breathing room left/right
         const padYTop  = 28   // px above the tallest ascenders
-        const padYBot  = 28   // px below the baseline — subtitle sits naturally on the waves
+        const padYBot  = 28   // px below the baseline, subtitle sits naturally on the waves
         const overspill = overspillPxRef.current
         const parallax  = parallaxCurrentRef.current
 
@@ -276,8 +260,6 @@ export function Waves({
         }
     }
 
-    // Update every line's stroke colour for the given scroll progress.
-    // Called only when progress has shifted enough to be worth the DOM writes.
     const applyLineColors = (progress: number) => {
         const paths = pathsRef.current
         const n     = paths.length
@@ -318,11 +300,9 @@ export function Waves({
         const l2    = l * l
         const cursorInfluence = l * mvs * 0.00035
 
-        // Text repulsion — hoist bounds lookup out of inner loop
         const tb = textBoundsRef.current
-        // Feather zone: lines this far outside the box are already unaffected
-        const TEXT_FEATHER = 85   // px — width of the transition region
-        const TEXT_PUSH    = 58   // max displacement in px
+        const TEXT_FEATHER = 85   
+        const TEXT_PUSH    = 58  
 
         for (let i = 0; i < lines.length; i++) {
             const points = lines[i]
@@ -337,12 +317,7 @@ export function Waves({
                 p.waveX = Math.cos(move) * 6
                 p.waveY = Math.sin(move) * 12
 
-                // ── Text repulsion ─────────────────────────────────────────
-                // Works in rest-position space (p.x, p.y) so the effect is
-                // stable and doesn't feed back through the displacement itself.
                 if (tb) {
-                    // Signed distances into the bounding box on each axis.
-                    // Positive = inside the box, negative = outside.
                     const overlapX = p.x > tb.left && p.x < tb.right
                         ? Math.min(p.x - tb.left, tb.right  - p.x)
                         : -(p.x < tb.left ? tb.left - p.x : p.x - tb.right)
@@ -350,18 +325,12 @@ export function Waves({
                         ? Math.min(p.y - tb.top,  tb.bottom - p.y)
                         : -(p.y < tb.top  ? tb.top  - p.y : p.y - tb.bottom)
 
-                    // Only act when the point is inside or within feather range
                     if (overlapX > -TEXT_FEATHER && overlapY > -TEXT_FEATHER) {
-                        // Blend factor: 0 at feather edge → 1 fully inside
                         const fx = Math.max(0, Math.min(1, (overlapX + TEXT_FEATHER) / TEXT_FEATHER))
                         const fy = Math.max(0, Math.min(1, (overlapY + TEXT_FEATHER) / TEXT_FEATHER))
                         const strength = fx * fy
 
                         if (strength > 0) {
-                            // Push away from the box centre — active both inside
-                            // the box AND in the feather zone so the displacement
-                            // tapers smoothly to zero rather than jumping to zero
-                            // at the box edge (which caused bunching / extra lines).
                             const pushY = p.y < (tb.top + tb.bottom) * 0.5 ? -1 : 1
                             p.waveY += pushY * strength * TEXT_PUSH
                         }

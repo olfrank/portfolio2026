@@ -3,23 +3,22 @@ import { motion } from 'framer-motion';
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const bioParagraphs = [
-  "I'm a product-focused front-end engineer with a strong eye for design and a deep appreciation for detail, motion, and performance.",
-  "I enjoy building interfaces that feel calm, intuitive, and refined — caring as much about how something feels as how it functions.",
-  "My work sits at the intersection of design, engineering, and product thinking.",
+  "I co-founded TRAX, a venture-backed direct-to-fan music platform, and served as CTO from the first line of code through to a $2.4M raise, a team of three engineers, and 50,000 fans across 75 countries.",
+  "Right now I'm building CallGuard: a SaaS product for UK tradespeople that automates missed-call handling. Designed, engineered, and shipped solo.",
+  "I work at the intersection of design and engineering. I care about how products feel and how they're built, and think both matter equally.",
 ];
 
 const stats = [
-  { value: "4+",   label: "Years Building Products" },
-  { value: "2",    label: "Ventures Co-Founded" },
-  { value: "Solo", label: "End-to-End Delivery" },
-  { value: "UK",   label: "Based & Available" },
+  { value: "$2.4M", label: "Raised at TRAX" },
+  { value: "50k+",  label: "Fans, 75+ Countries" },
+  { value: "2",     label: "Ventures Co-Founded" },
+  { value: "2026",  label: "CallGuard Shipped" },
 ];
 
 const About = () => (
   <section id="about" className="section-padding">
     <div className="max-w-5xl mx-auto px-6">
 
-      {/* Eyebrow label */}
       <motion.div
         className="text-center mb-16"
         initial={{ opacity: 0, y: 20 }}
@@ -28,20 +27,8 @@ const About = () => (
         transition={{ duration: 0.6 }}
       >
         <h2 className="section-title mb-4">About</h2>
-        <p className="section-subtitle mb-6">
-          A focused toolkit for building premium, performance-first interfaces.
-        </p>
-        {/* <div className="flex justify-center">
-          <div style={{
-            width: 64,
-            height: 2,
-            borderRadius: 2,
-            background: 'linear-gradient(to right, transparent, rgba(77,159,255,0.7) 40%, rgba(77,159,255,0.7) 60%, transparent)',
-          }} />
-        </div> */}
       </motion.div>
 
-      {/* Gradient-border card wrapper */}
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -64,7 +51,6 @@ const About = () => (
         >
           <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-10 md:gap-14">
 
-            {/* Left: bio text */}
             <div className="flex flex-col gap-5">
               {bioParagraphs.map((para, i) => (
                 <motion.p
@@ -85,7 +71,6 @@ const About = () => (
               ))}
             </div>
 
-            {/* Right: stats */}
             <div
               className="flex flex-col gap-6 md:border-l"
               style={{
@@ -105,10 +90,10 @@ const About = () => (
                   viewport={{ once: true, margin: '-60px' }}
                   transition={{ duration: 0.5, ease: EASE, delay: 0.3 + i * 0.1 }}
                 >
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                     {stat.value}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '0.3rem', lineHeight: 1.4 }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 400, letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginTop: '0.35rem', lineHeight: 1.4, textTransform: 'uppercase' }}>
                     {stat.label}
                   </div>
                 </motion.div>

@@ -127,25 +127,16 @@ const icons = {
   ),
 };
 
-// ─── Bento grid data ──────────────────────────────────────────────────────────
-// `wide: true` = spans 2 columns on desktop
 
 const tiles = [
-  { icon: icons.react,        name: 'React & Next.js',             desc: 'Component architecture, SSR & app routing',       wide: true  },
-  { icon: icons.typescript,   name: 'TypeScript',                  desc: 'Type-safe development at scale',                  wide: false },
-  { icon: icons.tailwind,     name: 'Tailwind CSS',                desc: 'Utility-first styling & design systems',          wide: false },
-  { icon: icons.uiux,         name: 'UI/UX Design',                desc: 'Visual systems, Figma & interaction design',      wide: false },
-  { icon: icons.performance,  name: 'Performance',                 desc: 'Core Web Vitals & bundle optimisation',           wide: false },
-  { icon: icons.motion,       name: 'Motion Design',               desc: 'Framer Motion, CSS transitions & micro-interactions', wide: true  },
-  { icon: icons.backend,      name: 'Backend & APIs',              desc: 'Node.js, Express & PostgreSQL with REST API design',  wide: true  },
-  { icon: icons.crossPlatform,name: 'Cross-Platform',              desc: 'Web-to-native iOS delivery with Capacitor',           wide: false },
-  { icon: icons.devops,       name: 'DevOps & Deployment',         desc: 'Docker, CI/CD, Vercel & Render',                      wide: false },
-  { icon: icons.designCode,   name: 'Design-to-Code',              desc: 'Translating high-fidelity designs into pixel-perfect UI', wide: true },
-  { icon: icons.components,   name: 'Component Architecture',      desc: 'Scalable, reusable UI systems',                   wide: false },
-  { icon: icons.responsive,   name: 'Responsive Design',           desc: 'Mobile-first, fluid layouts',                     wide: false },
-  { icon: icons.product,      name: 'Product Thinking',            desc: 'Feature scoping, user flows & launch strategy',   wide: true  },
-  { icon: icons.designSystems,name: 'Design Systems',              desc: 'Tokens, components & documentation',              wide: false },
-  { icon: icons.accessibility,name: 'Accessibility',               desc: 'WCAG compliance & inclusive patterns',            wide: false },
+  { icon: icons.react,        name: 'React & Next.js',    desc: 'Component architecture, SSR & app routing'            },
+  { icon: icons.typescript,   name: 'TypeScript',         desc: 'Type-safe development at scale'                       },
+  { icon: icons.uiux,         name: 'UI/UX Design',       desc: 'Visual systems, Figma & interaction design'           },
+  { icon: icons.motion,       name: 'Motion Design',      desc: 'Framer Motion, CSS transitions & micro-interactions'  },
+  { icon: icons.performance,  name: 'Performance',        desc: 'Core Web Vitals, bundle & runtime optimisation'       },
+  { icon: icons.backend,      name: 'Backend & APIs',     desc: 'Node.js, Express & PostgreSQL with REST API design'   },
+  { icon: icons.crossPlatform,name: 'Cross-Platform',     desc: 'Web-to-native iOS delivery via Capacitor'             },
+  { icon: icons.devops,       name: 'DevOps & Deployment',desc: 'CI/CD pipelines, Vercel & Render'                     },
 ];
 
 const tileVariants = {
@@ -170,7 +161,7 @@ const Skills = () => (
       >
         <h2 className="section-title mb-4">Skills & Capabilities</h2>
         <p className="section-subtitle mb-6">
-          A focused toolkit for building premium, performance-first interfaces.
+          From UI component to deployed product, the stack I use across web and iOS.
         </p>
         {/* <div className="flex justify-center">
           <div style={{
@@ -184,7 +175,7 @@ const Skills = () => (
 
       {/* Bento grid */}
       <motion.div
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-80px' }}
@@ -194,16 +185,17 @@ const Skills = () => (
             key={tile.name}
             custom={i}
             variants={tileVariants}
-            className={tile.wide ? 'col-span-2' : 'col-span-1'}
+            className="col-span-1"
             style={{
-              background: 'rgba(255,255,255,0.035)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '16px',
-              padding: '1.25rem 1.4rem',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: '14px',
+              padding: '1.35rem 1.5rem',
               cursor: 'default',
               position: 'relative',
               overflow: 'hidden',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
             }}
             whileHover={{
               y: -4,
@@ -212,7 +204,6 @@ const Skills = () => (
               transition: { type: 'spring', stiffness: 340, damping: 22 },
             }}
           >
-            {/* Top-edge glow line — revealed via pseudo via box-shadow on hover */}
             <div style={{ color: 'rgba(180,210,255,0.55)', marginBottom: '0.85rem' }}>
               {tile.icon}
             </div>

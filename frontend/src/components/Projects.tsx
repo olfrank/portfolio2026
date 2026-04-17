@@ -9,19 +9,14 @@ const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 // Per-project accent colours
 const ACCENTS: Record<number, string> = {
-  1: '#4d9fff',   // CallGuard — site blue
-  2: '#bfff00',   // TRAX — lime green
-  3: '#94a3b8',   // Nous — silver
-  4: '#bfff00',   // TRAX Studio — lime green
-  5: '#bfff00',   // TRAX Links — lime green
+  1: '#4d9fff',   
+  2: '#bfff00', 
+  3: '#94a3b8',
+  4: '#bfff00',  
+  5: '#bfff00',  
 };
 
 // ─── Slideshow ────────────────────────────────────────────────────────────────
-// Shared image area for all cards and the modal.
-// - Auto-cycles every 5s, pauses on hover
-// - Smooth crossfade between slides
-// - Dot indicators; clicking a dot jumps to that slide
-// - All images except the first are lazy-loaded
 
 const Slideshow = ({
   images,
@@ -45,7 +40,6 @@ const Slideshow = ({
     return () => clearInterval(id);
   }, [images.length, paused]);
 
-  // Reset to first slide when images change (e.g. different modal opened)
   useEffect(() => { setCurrent(0); }, [images]);
 
   return (
@@ -78,7 +72,6 @@ const Slideshow = ({
         />
       ))}
 
-      {/* Dot indicators — only when more than one image */}
       {images.length > 1 && (
         <div
           style={{
@@ -113,7 +106,6 @@ const Slideshow = ({
         </div>
       )}
 
-      {/* Hover overlay — card only, not modal */}
       {!isModal && (
         <div
           className="card-img-overlay absolute inset-0 flex items-center justify-center"
@@ -122,6 +114,7 @@ const Slideshow = ({
           <span
             className="card-img-label"
             style={{
+              fontFamily: 'var(--font-sans)',
               color: accent,
               fontSize: '0.875rem',
               fontWeight: 600,
@@ -168,33 +161,57 @@ const ProjectCard = ({
       <Slideshow images={project.images} bg={project.bg} accent={accent} />
 
       <div className="px-5 py-5 flex flex-col gap-2.5 backdrop-blur-sm">
-        {/* Category badge */}
         <span
           className="self-start text-xs px-2.5 py-1 rounded-full font-medium tracking-wide uppercase"
-          style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+          style={{
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.04em',
+            background: `${accent}18`,
+            color: accent,
+            border: `1px solid ${accent}30`,
+          }}
         >
           {project.category}
         </span>
 
-        {/* Name + year */}
         <div className="flex items-center justify-between gap-4">
-          <h3 className="text-lg font-semibold leading-tight" style={{ color: 'var(--foreground)' }}>
+          <h3
+            className="text-2xl leading-tight"
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontWeight: 400,
+              color: 'var(--foreground)',
+            }}
+          >
             {project.name}
           </h3>
           <span
-            className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium"
-            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+            className="shrink-0 text-xs px-2.5 py-1 rounded-full"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 400,
+              letterSpacing: '0.02em',
+              background: `${accent}18`,
+              color: accent,
+              border: `1px solid ${accent}30`,
+            }}
           >
             {project.year}
           </span>
         </div>
 
-        {/* Role */}
-        <p className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-tertiary)' }}>
+        <p
+          className="text-xs tracking-widest uppercase"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 400,
+            letterSpacing: '0.06em',
+            color: 'var(--text-tertiary)',
+          }}
+        >
           {project.role}
         </p>
 
-        {/* Description — clamped to 2 lines */}
         <p
           className="text-sm leading-relaxed"
           style={{
@@ -208,15 +225,30 @@ const ProjectCard = ({
           {project.description}
         </p>
 
-        {/* Tech tags */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
           {project.techStack.slice(0, 5).map((tech, i) => (
-            <span key={i} style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.7 }}>
+            <span
+              key={i}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.02em',
+                color: 'var(--text-tertiary)',
+                opacity: 0.7,
+              }}
+            >
               {tech}
             </span>
           ))}
           {project.techStack.length > 5 && (
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.45 }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                color: 'var(--text-tertiary)',
+                opacity: 0.45,
+              }}
+            >
               +{project.techStack.length - 5}
             </span>
           )}
@@ -244,20 +276,23 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
       whileHover={{ y: -5, boxShadow: `0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px ${accent}35`, transition: { type: 'spring', stiffness: 300, damping: 22 } }}
       onClick={onClick}
     >
-      {/* Horizontal on md+, stacked on mobile */}
       <div className="flex flex-col md:flex-row">
 
-        {/* Image — 58% on desktop */}
         <div className="md:w-[58%] shrink-0">
           <Slideshow images={project.images} bg={project.bg} accent={accent} featured />
         </div>
 
-        {/* Details — 42% */}
         <div className="flex flex-col justify-center gap-4 px-7 py-8 md:py-10 backdrop-blur-sm">
-          {/* Category pill */}
           <span
-            className="self-start text-xs px-2.5 py-1 rounded-full font-medium tracking-wide uppercase"
-            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+            className="self-start text-xs px-2.5 py-1 rounded-full uppercase"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 500,
+              letterSpacing: '0.04em',
+              background: `${accent}18`,
+              color: accent,
+              border: `1px solid ${accent}30`,
+            }}
           >
             {project.category}
           </span>
@@ -265,28 +300,49 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
           {/* Name + year */}
           <div>
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-2xl font-bold leading-tight" style={{ color: 'var(--foreground)' }}>
+              <h3
+                className="text-2xl leading-tight"
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontWeight: 400,
+                  color: 'var(--foreground)',
+                }}
+              >
                 {project.name}
               </h3>
               <span
-                className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium mt-1"
-                style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+                className="shrink-0 text-xs px-2.5 py-1 rounded-full mt-1"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 400,
+                  letterSpacing: '0.02em',
+                  background: `${accent}18`,
+                  color: accent,
+                  border: `1px solid ${accent}30`,
+                }}
               >
                 {project.year}
               </span>
             </div>
-            <p className="text-xs font-medium tracking-widest uppercase mt-1.5" style={{ color: 'var(--text-tertiary)' }}>
+            <p
+              className="text-xs tracking-widest uppercase mt-1.5"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 400,
+                letterSpacing: '0.06em',
+                color: 'var(--text-tertiary)',
+              }}
+            >
               {project.role}
             </p>
           </div>
 
-          {/* Description */}
           <p
             className="text-sm leading-relaxed"
             style={{
               color: 'var(--text-secondary)',
               display: '-webkit-box',
-              WebkitLineClamp: 5,
+              WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             } as React.CSSProperties}
@@ -294,22 +350,39 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
             {project.description}
           </p>
 
-          {/* Tech tags */}
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {project.techStack.slice(0, 6).map((tech, i) => (
-              <span key={i} style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.7 }}>
+              <span
+                key={i}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.02em',
+                  color: 'var(--text-tertiary)',
+                  opacity: 0.7,
+                }}
+              >
                 {tech}
               </span>
             ))}
             {project.techStack.length > 6 && (
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', opacity: 0.45 }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-tertiary)',
+                  opacity: 0.45,
+                }}
+              >
                 +{project.techStack.length - 6}
               </span>
             )}
           </div>
 
-          {/* CTA hint */}
-          <span className="text-xs font-medium mt-1" style={{ color: accent, opacity: 0.8 }}>
+          <span
+            className="text-xs font-medium mt-1"
+            style={{ fontFamily: 'var(--font-sans)', color: accent, opacity: 0.8 }}
+          >
             View Project →
           </span>
         </div>
@@ -323,7 +396,12 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
 const MetaBar = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
   <div className="flex flex-col items-center gap-1.5 py-5">
     <div style={{ color: '#888' }}>{icon}</div>
-    <span className="text-sm font-medium text-center" style={{ color: '#333' }}>{label}</span>
+    <span
+      className="text-sm font-medium text-center"
+      style={{ fontFamily: 'var(--font-sans)', color: '#333' }}
+    >
+      {label}
+    </span>
   </div>
 );
 
@@ -357,7 +435,7 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
         exit={{ opacity: 0, scale: 0.96, y: 16 }}
         transition={{ type: 'spring', stiffness: 320, damping: 28 }}
         className="relative w-full max-w-lg rounded-3xl overflow-hidden overflow-y-auto"
-        style={{ background: '#ffffff', maxHeight: '90vh' }}
+        style={{ background: '#ffffff', maxHeight: '90vh', fontFamily: 'var(--font-sans)' }}
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -369,24 +447,40 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
           <X className="w-4 h-4" style={{ color: '#444' }} />
         </button>
 
-        {/* Image gallery */}
         <Slideshow images={project.images} bg={project.bg} accent={accent} isModal />
 
         <div className="flex flex-col items-center gap-2.5 pt-6 pb-4 px-8">
           <Monitor className="w-5 h-5" style={{ color: '#888' }} />
           <span
-            className="text-xs px-3 py-1 rounded-full uppercase tracking-wide font-medium"
-            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}30` }}
+            className="text-xs px-3 py-1 rounded-full uppercase tracking-wide"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 500,
+              letterSpacing: '0.05em',
+              background: `${accent}18`,
+              color: accent,
+              border: `1px solid ${accent}30`,
+            }}
           >
             {project.category}
           </span>
         </div>
 
-        <h2 className="text-2xl font-bold text-center px-8 pb-6 leading-tight" style={{ color: '#111' }}>
+        <h2
+          className="text-2xl text-center px-8 pb-6 leading-tight"
+          style={{
+            fontFamily: 'var(--font-serif)',
+            fontWeight: 400,
+            color: '#111',
+          }}
+        >
           {project.name}
         </h2>
 
-        <div className="grid grid-cols-2" style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}>
+        <div
+          className="grid grid-cols-2"
+          style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}
+        >
           <div style={{ borderRight: '1px solid #e8e8e8' }}>
             <MetaBar icon={<CircleUser className="w-5 h-5" />} label={project.client} />
           </div>
@@ -395,13 +489,27 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
 
         <div className="px-8 py-8 flex flex-col gap-4">
           {project.fullDescription.split('\n\n').map((para, i) => (
-            <p key={i} className="text-sm text-center leading-relaxed" style={{ color: '#555' }}>{para}</p>
+            <p
+              key={i}
+              className="text-sm text-center leading-relaxed"
+              style={{ fontFamily: 'var(--font-sans)', color: '#555' }}
+            >
+              {para}
+            </p>
           ))}
         </div>
 
-        <div className="flex flex-col items-center gap-1.5 py-5" style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}>
+        <div
+          className="flex flex-col items-center gap-1.5 py-5"
+          style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}
+        >
           <MessageSquareText className="w-5 h-5" style={{ color: '#888' }} />
-          <span className="text-sm font-semibold" style={{ color: '#333' }}>Project Highlights</span>
+          <span
+            className="text-sm font-semibold"
+            style={{ fontFamily: 'var(--font-sans)', color: '#333' }}
+          >
+            Project Highlights
+          </span>
         </div>
 
         <div className="px-8 py-6 flex flex-col gap-3">
@@ -411,7 +519,12 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
                 className="shrink-0 rounded-full mt-1.5"
                 style={{ width: 6, height: 6, background: accent, opacity: 0.6 }}
               />
-              <p className="text-sm leading-relaxed" style={{ color: '#555' }}>{h}</p>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ fontFamily: 'var(--font-sans)', color: '#555' }}
+              >
+                {h}
+              </p>
             </div>
           ))}
         </div>
@@ -429,12 +542,11 @@ const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const [featured, ...rest] = portfolioData.projects;
-  const row2 = rest.slice(0, 2); // TRAX Studio, TRAX Links
-  const row3 = rest.slice(2, 4); // CallGuard, Nous
+  const row2 = rest.slice(0, 2);
+  const row3 = rest.slice(2, 4);
 
   return (
     <section id="projects" className="section-padding">
-      {/* Hover overlay CSS */}
       <style>{`
         .project-card-hover:hover .card-img-overlay {
           background: rgba(0,0,0,0.38) !important;
@@ -446,7 +558,6 @@ const Projects = () => {
       `}</style>
 
       <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
@@ -458,12 +569,10 @@ const Projects = () => {
           <p className="section-subtitle">Products I've designed, built, and shipped.</p>
         </motion.div>
 
-        {/* Row 1: Featured */}
         <div className="mb-6">
           <FeaturedCard project={featured} onClick={() => setSelectedProject(featured)} />
         </div>
 
-        {/* Row 2: TRAX Studio + TRAX Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {row2.map((p, i) => (
             <ProjectCard
@@ -475,7 +584,6 @@ const Projects = () => {
           ))}
         </div>
 
-        {/* Row 3: CallGuard + Nous */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {row3.map((p, i) => (
             <ProjectCard
