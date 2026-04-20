@@ -81,25 +81,30 @@ export function Waves({
 
 
     const setSize = useCallback(() => {
-        if (!containerRef.current || !svgRef.current) return
-        const vw = window.innerWidth
-        const vh = window.innerHeight
-
-        const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
-        const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
-        const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
-        const containerH  = vh + overspill * 2
-
-        overspillPxRef.current = overspill
-        dimsRef.current = { width: vw, height: containerH }
-
-        containerRef.current.style.top    = `${-overspill}px`
-        containerRef.current.style.height = `${containerH}px`
-        svgRef.current.style.width  = `${vw}px`
-        svgRef.current.style.height = `${containerH}px`
-
-        measureTextBounds()
-    },[])
+      if (!containerRef.current || !svgRef.current) return
+    
+      const vw = window.innerWidth
+      const docH = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.clientHeight
+      )
+    
+      const overspill = Math.max(Math.round(window.innerHeight * OVERSPILL), 64)
+      const containerH = docH + overspill * 2
+    
+      overspillPxRef.current = overspill
+      dimsRef.current = { width: vw, height: containerH }
+    
+      containerRef.current.style.top = `${-overspill}px`
+      containerRef.current.style.height = `${containerH}px`
+      svgRef.current.style.width = `${vw}px`
+      svgRef.current.style.height = `${containerH}px`
+    
+      measureTextBounds()
+    }, [])
 
     const onResize = useCallback(() => {
         if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current)
@@ -179,7 +184,11 @@ export function Waves({
 
         const onScroll = () => {
             parallaxTargetRef.current = -window.scrollY * PARALLAX_FACTOR
-            const maxScroll = document.body.scrollHeight - window.innerHeight
+            const docH = Math.max(
+              document.body.scrollHeight,
+              document.documentElement.scrollHeight
+            )
+            const maxScroll = docH - window.innerHeight
             if (maxScroll > 0) {
                 progressTargetRef.current = window.scrollY / maxScroll
             }
@@ -427,12 +436,12 @@ export function Waves({
             className={`waves-component ${className}`}
             style={{
                 backgroundColor,
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '100vh',
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
                 zIndex: 0,
+                pointerEvents: 'none',
                 willChange: 'transform',
             } as React.CSSProperties}
         >

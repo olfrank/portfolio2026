@@ -76,11 +76,13 @@ body {
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
   padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100dvh;
 }
 
 .portfolio-app {
   position: relative;
-  min-height: 100vh;
+  background: #0c111d;
+  overflow: hidden;
 }
 
 /* ============================================
@@ -610,7 +612,7 @@ body {
   }
 
   .hero-section {
-    min-height: 80vh;
+    min-height: 100svh;
   }
 }
 

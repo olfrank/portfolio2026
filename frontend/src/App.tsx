@@ -20,14 +20,12 @@ function App() {
 
   return (
     <ThemeProvider>
+      <div className="App portfolio-app">
       <Waves />
-      <div className="App portfolio-app" style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1 }}>
       
-          
-          
-<Header />
+        <Header />
   
-        
         <main>
           <Hero />
           <Projects />
@@ -37,6 +35,7 @@ function App() {
         </main>
         <Footer />
         <Toaster />
+      </div>
       </div>
     </ThemeProvider>
   );
