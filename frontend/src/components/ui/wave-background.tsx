@@ -81,30 +81,29 @@ export function Waves({
 
 
     const setSize = useCallback(() => {
-      if (!containerRef.current || !svgRef.current) return
-    
-      const vw = window.innerWidth
-      const docH = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.offsetHeight,
-        document.documentElement.clientHeight
-      )
-    
-      const overspill = Math.max(Math.round(window.innerHeight * OVERSPILL), 64)
-      const containerH = docH + overspill * 2
-    
-      overspillPxRef.current = overspill
-      dimsRef.current = { width: vw, height: containerH }
-    
-      containerRef.current.style.top = `${-overspill}px`
-      containerRef.current.style.height = `${containerH}px`
-      svgRef.current.style.width = `${vw}px`
-      svgRef.current.style.height = `${containerH}px`
-    
-      measureTextBounds()
-    }, [])
+        if (!containerRef.current || !svgRef.current) return
+        const vw = window.innerWidth
+        const vh = window.visualViewport?.height ?? window.innerHeight
+
+        // const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
+        // const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
+        // const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
+         const overspill = Math.min(
+        Math.max(Math.round(vh * OVERSPILL), 120),
+        220
+    )
+        const containerH  = vh + overspill * 2
+
+        overspillPxRef.current = overspill
+        dimsRef.current = { width: vw, height: containerH }
+
+        containerRef.current.style.top    = `${-overspill}px`
+        containerRef.current.style.height = `${containerH}px`
+        svgRef.current.style.width  = `${vw}px`
+        svgRef.current.style.height = `${containerH}px`
+
+        measureTextBounds()
+    },[])
 
     const onResize = useCallback(() => {
         if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current)
@@ -184,11 +183,7 @@ export function Waves({
 
         const onScroll = () => {
             parallaxTargetRef.current = -window.scrollY * PARALLAX_FACTOR
-            const docH = Math.max(
-              document.body.scrollHeight,
-              document.documentElement.scrollHeight
-            )
-            const maxScroll = docH - window.innerHeight
+            const maxScroll = document.body.scrollHeight - window.innerHeight
             if (maxScroll > 0) {
                 progressTargetRef.current = window.scrollY / maxScroll
             }
@@ -196,9 +191,11 @@ export function Waves({
         }
 
         window.addEventListener('resize', onResize)
-        window.addEventListener('mousemove', onMouseMove)
-        window.addEventListener('scroll', onScroll, { passive: true })
-        document.addEventListener('visibilitychange', onVisibilityChange)
+window.addEventListener('mousemove', onMouseMove)
+window.addEventListener('scroll', onScroll, { passive: true })
+window.visualViewport?.addEventListener('resize', onResize)
+window.visualViewport?.addEventListener('scroll', onResize)
+document.addEventListener('visibilitychange', onVisibilityChange)
 
         rafRef.current = requestAnimationFrame(tick)
 
@@ -206,9 +203,11 @@ export function Waves({
             clearTimeout(resizeTimer)
             if (rafRef.current) cancelAnimationFrame(rafRef.current)
             window.removeEventListener('resize', onResize)
-            window.removeEventListener('mousemove', onMouseMove)
-            window.removeEventListener('scroll', onScroll)
-            document.removeEventListener('visibilitychange', onVisibilityChange)
+window.removeEventListener('mousemove', onMouseMove)
+window.removeEventListener('scroll', onScroll)
+window.visualViewport?.removeEventListener('resize', onResize)
+window.visualViewport?.removeEventListener('scroll', onResize)
+document.removeEventListener('visibilitychange', onVisibilityChange)
         }
     }, [onResize, setSize, tick])
 
@@ -436,13 +435,14 @@ export function Waves({
             className={`waves-component ${className}`}
             style={{
                 backgroundColor,
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 zIndex: 0,
-                pointerEvents: 'none',
                 willChange: 'transform',
+                pointerEvents: 'none',
             } as React.CSSProperties}
         >
             <svg
