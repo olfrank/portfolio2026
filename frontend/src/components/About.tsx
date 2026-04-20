@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const bioParagraphs = [
-  "I co-founded TRAX, a venture-backed direct-to-fan music platform, and served as CTO from the first line of code through to a $2.4M raise, a team of three engineers, and 50,000 fans across 75 countries.",
+  "I co-founded TRAX, a venture-backed direct-to-fan music platform, and served as CTO from the first line of code through to a £2.4M raise, a team of three engineers, and 50,000 fans across 75 countries.",
   "Right now I'm building CallGuard: a SaaS product for UK tradespeople that automates missed-call handling. Designed, engineered, and shipped solo.",
   "I work at the intersection of design and engineering. I care about how products feel and how they're built, and think both matter equally.",
 ];
 
 const stats = [
-  { value: "$2.4M", label: "Raised at TRAX" },
+  { value: "£2.4M", label: "Raised at TRAX" },
   { value: "50k+",  label: "Fans, 75+ Countries" },
   { value: "2",     label: "Ventures Co-Founded" },
   { value: "2026",  label: "CallGuard Shipped" },

@@ -52,8 +52,10 @@ export function Waves({
     backgroundColor = "#0c111d",
     pointerSize = 0,
 }: WavesProps) {
-    const containerRef = useRef<HTMLDivElement>(null)
-    const svgRef       = useRef<SVGSVGElement>(null)
+    const containerRef    = useRef<HTMLDivElement>(null)
+    const svgRef          = useRef<SVGSVGElement>(null)
+    const lastResizeWidth  = useRef(0)
+    const resizeTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
     const mouseRef = useRef({ x: -10, y: 0, lx: 0, ly: 0, sx: 0, sy: 0, v: 0, vs: 0, a: 0, set: false })
     const pathsRef     = useRef<SVGPathElement[]>([])
     const linesRef     = useRef<Point[][]>([])
@@ -99,7 +101,19 @@ export function Waves({
         measureTextBounds()
     },[])
 
-    const onResize = useCallback(() => { setSize(); setLines(); measureTextBounds() }, [setSize])
+    const onResize = useCallback(() => {
+        if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current)
+        resizeTimerRef.current = setTimeout(() => {
+            const prevWidth = lastResizeWidth.current
+            const newWidth  = window.innerWidth
+            setSize()
+            if (Math.abs(newWidth - prevWidth) > 2) {
+                lastResizeWidth.current = newWidth
+                setLines()
+            }
+            measureTextBounds()
+        }, 80)
+    }, [setSize])
 
 
        const tick = useCallback((time: number) => {
@@ -137,7 +151,6 @@ export function Waves({
 
         if (containerRef.current) {
             containerRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
-            containerRef.current.style.filter    = 'blur(0.4px)'
         }
 
         movePoints(time)
@@ -148,6 +161,8 @@ export function Waves({
         if (!containerRef.current || !svgRef.current) return
 
         noiseRef.current = createNoise2D()
+        lastResizeWidth.current = window.innerWidth
+        if (containerRef.current) containerRef.current.style.filter = 'blur(0.4px)'
         setSize()
         setLines()
 
@@ -198,7 +213,7 @@ export function Waves({
         if (!el) { textBoundsRef.current = null; return }
 
         const r        = el.getBoundingClientRect()
-        const padX     = 24   // px of extra breathing room left/right
+        const padX     = 20   // px of extra breathing room left/right
         const padYTop  = 28   // px above the tallest ascenders
         const padYBot  = 28   // px below the baseline, subtitle sits naturally on the waves
         const overspill = overspillPxRef.current
@@ -301,7 +316,7 @@ export function Waves({
         const cursorInfluence = l * mvs * 0.00035
 
         const tb = textBoundsRef.current
-        const TEXT_FEATHER = 85   
+        const TEXT_FEATHER = 60
         const TEXT_PUSH    = 58  
 
         for (let i = 0; i < lines.length; i++) {

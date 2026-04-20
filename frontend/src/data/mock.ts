@@ -146,6 +146,8 @@ export const portfolioData: PortfolioData = {
       year: "2026",
       images: [
         "/static/callguard/callguard-home.png",
+        "/static/callguard/callguard-demo.png",
+        "/static/callguard/callguard-self-onboarding.png",
       ],
       bg: "#10121b",
       client: "Solo Project",

@@ -64,11 +64,12 @@ const Hero = () => {
           id="hero-title"
           style={{
             fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(3.5rem, 11vw, 8rem)',
+            fontSize: 'clamp(5rem, 11vw, 8rem)',
             fontWeight: 400,
             letterSpacing: '-0.02em',
             lineHeight: 1.0,
             marginBottom: '1.5rem',
+            display: 'inline-block',
             background: 'linear-gradient(158deg, #dbdbdb 25%, rgba(190,215,255,0.93) 65%, rgba(155,190,255,0.86) 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',

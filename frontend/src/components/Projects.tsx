@@ -398,7 +398,7 @@ const MetaBar = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
     <div style={{ color: '#888' }}>{icon}</div>
     <span
       className="text-sm font-medium text-center"
-      style={{ fontFamily: 'var(--font-sans)', color: '#333' }}
+      style={{ fontFamily: 'var(--font-sans)', color: '#b0b0b0' }}
     >
       {label}
     </span>
@@ -435,22 +435,22 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
         exit={{ opacity: 0, scale: 0.96, y: 16 }}
         transition={{ type: 'spring', stiffness: 320, damping: 28 }}
         className="relative w-full max-w-lg rounded-3xl overflow-hidden overflow-y-auto"
-        style={{ background: '#ffffff', maxHeight: '90vh', fontFamily: 'var(--font-sans)' }}
+        style={{ background: '#222222', maxHeight: '90vh', fontFamily: 'var(--font-sans)' }}
         onClick={e => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-opacity hover:opacity-60"
-          style={{ background: 'rgba(0,0,0,0.08)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.47)' }}
           aria-label="Close"
         >
-          <X className="w-4 h-4" style={{ color: '#444' }} />
+          <X className="w-4 h-4" style={{ color: '#f0f0f0' }} />
         </button>
 
         <Slideshow images={project.images} bg={project.bg} accent={accent} isModal />
 
         <div className="flex flex-col items-center gap-2.5 pt-6 pb-4 px-8">
-          <Monitor className="w-5 h-5" style={{ color: '#888' }} />
+          <Monitor className="w-5 h-5" style={{ color: '#999999' }} />
           <span
             className="text-xs px-3 py-1 rounded-full uppercase tracking-wide"
             style={{
@@ -467,11 +467,11 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
         </div>
 
         <h2
-          className="text-2xl text-center px-8 pb-6 leading-tight"
+          className="text-3xl text-center px-8 pb-6 leading-tight"
           style={{
             fontFamily: 'var(--font-serif)',
             fontWeight: 400,
-            color: '#111',
+            color: '#ffffff',
           }}
         >
           {project.name}
@@ -479,9 +479,9 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
 
         <div
           className="grid grid-cols-2"
-          style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}
+          style={{ background: '#0c0c0c', borderTop: '1px solid #505050', borderBottom: '1px solid #505050' }}
         >
-          <div style={{ borderRight: '1px solid #e8e8e8' }}>
+          <div style={{ borderRight: '1px solid #505050' }}>
             <MetaBar icon={<CircleUser className="w-5 h-5" />} label={project.client} />
           </div>
           <MetaBar icon={<Sparkles className="w-5 h-5" />} label={project.techType} />
@@ -492,7 +492,7 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
             <p
               key={i}
               className="text-sm text-center leading-relaxed"
-              style={{ fontFamily: 'var(--font-sans)', color: '#555' }}
+              style={{ fontFamily: 'var(--font-sans)', color: '#dddddd' }}
             >
               {para}
             </p>
@@ -501,12 +501,12 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
 
         <div
           className="flex flex-col items-center gap-1.5 py-5"
-          style={{ background: '#f5f5f5', borderTop: '1px solid #e8e8e8', borderBottom: '1px solid #e8e8e8' }}
+          style={{ background: '#0c0c0c', borderTop: '1px solid #505050', borderBottom: '1px solid #505050' }}
         >
           <MessageSquareText className="w-5 h-5" style={{ color: '#888' }} />
           <span
             className="text-sm font-semibold"
-            style={{ fontFamily: 'var(--font-sans)', color: '#333' }}
+            style={{ fontFamily: 'var(--font-sans)', color: '#b0b0b0' }}
           >
             Project Highlights
           </span>
@@ -521,7 +521,7 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
               />
               <p
                 className="text-sm leading-relaxed"
-                style={{ fontFamily: 'var(--font-sans)', color: '#555' }}
+                style={{ fontFamily: 'var(--font-sans)', color: '#dddddd' }}
               >
                 {h}
               </p>

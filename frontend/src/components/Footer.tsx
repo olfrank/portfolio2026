@@ -13,7 +13,7 @@ const Footer = () => {
           transition={{ duration: 0.6 }}
         >
           <p className="footer-text mb-2">
-            Designed and built with care by Ollie Francis
+            Designed and built by Ollie Francis
           </p>
           <p className="footer-subtext">
             © {new Date().getFullYear()} All rights reserved.
