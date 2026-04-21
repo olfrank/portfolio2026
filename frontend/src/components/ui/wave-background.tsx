@@ -4,7 +4,11 @@ import { useEffect, useRef, useCallback } from 'react'
 import { createNoise2D } from 'simplex-noise'
 
 const PARALLAX_FACTOR = 0.06
-const OVERSPILL = 0.18
+const OVERSPILL       = 0.18
+const IS_MOBILE       = typeof window !== 'undefined' && window.innerWidth < 768
+const X_GAP           = IS_MOBILE ? 9 : 7
+const Y_GAP           = IS_MOBILE ? 9 : 7
+const TARGET_FPS      = IS_MOBILE ? 20 : 30
 
 const COLOR_PHASES = [
     // Deep blue top of page
@@ -122,8 +126,8 @@ export function Waves({
         rafRef.current = requestAnimationFrame(tick)
 
         const elapsed = time - lastFrameRef.current
-        if (elapsed < 1000 / 30) return
-        lastFrameRef.current = time - (elapsed % (1000 / 30))
+        if (elapsed < 1000 / TARGET_FPS) return
+        lastFrameRef.current = time - (elapsed % (1000 / TARGET_FPS))
 
         const mouse = mouseRef.current
 
@@ -146,7 +150,7 @@ export function Waves({
 
         progressCurrentRef.current += (progressTargetRef.current - progressCurrentRef.current) * 0.04
 
-        if (Math.abs(progressCurrentRef.current - lastColorProgress.current) > 0.004) {
+        if (Math.abs(progressCurrentRef.current - lastColorProgress.current) > 0.008) {
             applyLineColors(progressCurrentRef.current)
             lastColorProgress.current = progressCurrentRef.current
         }
@@ -244,8 +248,8 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
         pathsRef.current.forEach(path => path.remove())
         pathsRef.current = []
 
-        const xGap = 6
-        const yGap = 6
+        const xGap = X_GAP
+        const yGap = Y_GAP
 
         const totalLines  = Math.ceil((height + 200) / yGap)
         const totalPoints = Math.ceil((width  + 30)  / xGap)
@@ -364,7 +368,7 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
                 const dy = p.y - msy
                 const d2 = dx * dx + dy * dy
 
-                if (d2 < l2) {
+                if (mvs > 0.5 && d2 < l2) {
                     const d = Math.sqrt(d2)
                     const s = 1 - d / l
                     const f = Math.cos(d * 0.001) * s
@@ -422,7 +426,9 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
             }
             parts[pi++] = `L ${movedX[n - 1] | 0} ${movedY[n - 1] | 0}`
 
-            path.setAttribute('d', parts.slice(0, pi).join(' '))
+            let d = parts[0]
+            for (let k = 1; k < pi; k++) d += ' ' + parts[k]
+            path.setAttribute('d', d)
         }
     }
 
