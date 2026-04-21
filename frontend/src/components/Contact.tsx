@@ -17,7 +17,6 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!email || !message) {
       toast({
         title: "Missing fields",
@@ -49,7 +48,6 @@ const Contact = () => {
           title: "Message sent!",
           description: response.data.message,
         });
-        // Clear form
         setEmail('');
         setMessage('');
       } else {

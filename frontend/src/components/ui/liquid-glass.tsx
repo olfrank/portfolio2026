@@ -2,7 +2,6 @@
 
 import React from "react";
 
-// Types
 interface GlassEffectProps {
   children: React.ReactNode;
   className?: string;
@@ -17,7 +16,6 @@ interface DockIcon {
   onClick?: () => void;
 }
 
-// Glass Effect Wrapper Component
 export const GlassEffect: React.FC<GlassEffectProps> = ({
   children,
   className = "",
@@ -72,7 +70,6 @@ export const GlassEffect: React.FC<GlassEffectProps> = ({
   );
 };
 
-// Dock Component
 const GlassDock: React.FC<{ icons: DockIcon[]; href?: string }> = ({
   icons,
   href,
@@ -172,7 +169,7 @@ export const GlassFilter: React.FC = () => (
     </filter>
   </svg>
 );
-// Main Component
+
 export const Component = () => {
   const dockIcons: DockIcon[] = [
     {

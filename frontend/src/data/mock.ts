@@ -49,7 +49,6 @@ export const portfolioData: PortfolioData = {
   },
 
   projects: [
-    // ── Row 1: Featured ────────────────────────────────────────────────────────
     {
       id: 2,
       name: "TRAX",
@@ -83,7 +82,6 @@ export const portfolioData: PortfolioData = {
         "Shipped to 50,000+ fans across 75 countries",
       ],
     },
-    // ── Row 2: TRAX sub-products ───────────────────────────────────────────────
     {
       id: 4,
       name: "TRAX Admin Panel",
@@ -135,7 +133,6 @@ export const portfolioData: PortfolioData = {
         "Designed and developed solo in Next.js, TypeScript, and Tailwind CSS",
       ],
     },
-    // ── Row 3: Other projects ──────────────────────────────────────────────────
     {
       id: 1,
       name: "CallGuard",

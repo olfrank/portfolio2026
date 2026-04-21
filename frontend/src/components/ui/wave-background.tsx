@@ -85,22 +85,20 @@ export function Waves({
         const vw = window.innerWidth
         const vh = window.visualViewport?.height ?? window.innerHeight
 
-        // const maxScroll   = Math.max(0, document.documentElement.scrollHeight - vh)
-        // const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
-        // const overspill   = Math.max(Math.round(vh * OVERSPILL), minOverspill)
-         const overspill = Math.min(
-        Math.max(Math.round(vh * OVERSPILL), 120),
-        220
-    )
+        const maxScroll    = Math.max(0, document.documentElement.scrollHeight - vh)
+        const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
+        const overspill    = Math.max(Math.round(vh * OVERSPILL), minOverspill)
         const containerH  = vh + overspill * 2
 
         overspillPxRef.current = overspill
         dimsRef.current = { width: vw, height: containerH }
 
-        containerRef.current.style.top    = `${-overspill}px`
-        containerRef.current.style.height = `${containerH}px`
-        svgRef.current.style.width  = `${vw}px`
-        svgRef.current.style.height = `${containerH}px`
+        // Container is always viewport-sized (fixed top:0 bottom:0) — don't override it.
+        // Move the SVG instead so it extends above/below and can be parallax-shifted.
+        svgRef.current.style.position = 'absolute'
+        svgRef.current.style.top      = `${-overspill}px`
+        svgRef.current.style.width    = `${vw}px`
+        svgRef.current.style.height   = `${containerH}px`
 
         measureTextBounds()
     },[])
@@ -153,8 +151,8 @@ export function Waves({
             lastColorProgress.current = progressCurrentRef.current
         }
 
-        if (containerRef.current) {
-            containerRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
+        if (svgRef.current) {
+            svgRef.current.style.transform = `translateY(${parallaxCurrentRef.current.toFixed(2)}px)`
         }
 
         movePoints(time)
@@ -171,6 +169,9 @@ export function Waves({
         setLines()
 
         const resizeTimer = setTimeout(() => { setSize(); setLines(); measureTextBounds() }, 200)
+
+        const onLoad = () => { setSize(); measureTextBounds() }
+        window.addEventListener('load', onLoad)
 
         const onVisibilityChange = () => {
             if (document.hidden) {
@@ -201,6 +202,7 @@ document.addEventListener('visibilitychange', onVisibilityChange)
 
         return () => {
             clearTimeout(resizeTimer)
+            window.removeEventListener('load', onLoad)
             if (rafRef.current) cancelAnimationFrame(rafRef.current)
             window.removeEventListener('resize', onResize)
 window.removeEventListener('mousemove', onMouseMove)
@@ -359,7 +361,6 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
                         }
                     }
                 }
-                // ──────────────────────────────────────────────────────────
 
                 const dx = p.x - msx
                 const dy = p.y - msy
@@ -441,7 +442,7 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
                 right: 0,
                 bottom: 0,
                 zIndex: 0,
-                willChange: 'transform',
+                overflow: 'hidden',
                 pointerEvents: 'none',
             } as React.CSSProperties}
         >
@@ -452,6 +453,7 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
                 style={{
                     maskImage:       'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
                     WebkitMaskImage: 'radial-gradient(ellipse 110% 65% at 50% 50%, black 10%, rgba(0,0,0,0.7) 42%, rgba(0,0,0,0.15) 68%, transparent 85%)',
+                    willChange: 'transform',
                 }}
             />
             {pointerSize > 0 && (

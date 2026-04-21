@@ -14,7 +14,6 @@ import { Waves } from './components/ui/wave-background';
 
 function App() {
   useEffect(() => {
-    // Smooth scroll behavior
     document.documentElement.style.scrollBehavior = 'smooth';
   }, []);
 

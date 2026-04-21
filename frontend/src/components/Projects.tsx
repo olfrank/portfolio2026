@@ -7,7 +7,6 @@ import { X, Monitor, CircleUser, Sparkles, MessageSquareText } from 'lucide-reac
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-// Per-project accent colours
 const ACCENTS: Record<number, string> = {
   1: '#4d9fff',   
   2: '#bfff00', 
@@ -16,7 +15,6 @@ const ACCENTS: Record<number, string> = {
   5: '#bfff00',  
 };
 
-// ─── Slideshow ────────────────────────────────────────────────────────────────
 
 const Slideshow = ({
   images,
@@ -132,7 +130,6 @@ const Slideshow = ({
   );
 };
 
-// ─── Standard card ────────────────────────────────────────────────────────────
 
 const ProjectCard = ({
   project,
@@ -258,7 +255,6 @@ const ProjectCard = ({
   );
 };
 
-// ─── Featured card (full-width, horizontal layout) ───────────────────────────
 
 const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => void }) => {
   const accent = ACCENTS[project.id] ?? '#4d9fff';
@@ -391,7 +387,6 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
   );
 };
 
-// ─── Modal ───────────────────────────────────────────────────────────────────
 
 const MetaBar = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
   <div className="flex flex-col items-center gap-1.5 py-5">
@@ -536,7 +531,6 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
   );
 };
 
-// ─── Section ─────────────────────────────────────────────────────────────────
 
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);

@@ -2,8 +2,6 @@ import { motion } from 'framer-motion';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-// Thin-line SVGs at 22×22, stroke-only, no fill
 
 const icons = {
   react: (
