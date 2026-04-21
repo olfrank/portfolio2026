@@ -6,9 +6,9 @@ import { createNoise2D } from 'simplex-noise'
 const PARALLAX_FACTOR = 0.06
 const OVERSPILL       = 0.18
 const IS_MOBILE       = typeof window !== 'undefined' && window.innerWidth < 768
-const X_GAP           = IS_MOBILE ? 9 : 7
-const Y_GAP           = IS_MOBILE ? 9 : 7
-const TARGET_FPS      = IS_MOBILE ? 20 : 30
+const X_GAP           = IS_MOBILE ? 7 : 7
+const Y_GAP           = IS_MOBILE ? 7 : 7
+const TARGET_FPS      = IS_MOBILE ? 30 : 30
 
 const COLOR_PHASES = [
     // Deep blue top of page
