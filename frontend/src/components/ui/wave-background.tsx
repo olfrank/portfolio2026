@@ -83,7 +83,7 @@ export function Waves({
     const setSize = useCallback(() => {
         if (!containerRef.current || !svgRef.current) return
         const vw = window.innerWidth
-        const vh = window.visualViewport?.height ?? window.innerHeight
+        const vh = window.innerHeight
 
         const maxScroll    = Math.max(0, document.documentElement.scrollHeight - vh)
         const minOverspill = Math.ceil(maxScroll * PARALLAX_FACTOR) + 32
@@ -195,7 +195,6 @@ export function Waves({
 window.addEventListener('mousemove', onMouseMove)
 window.addEventListener('scroll', onScroll, { passive: true })
 window.visualViewport?.addEventListener('resize', onResize)
-window.visualViewport?.addEventListener('scroll', onResize)
 document.addEventListener('visibilitychange', onVisibilityChange)
 
         rafRef.current = requestAnimationFrame(tick)
@@ -208,7 +207,6 @@ document.addEventListener('visibilitychange', onVisibilityChange)
 window.removeEventListener('mousemove', onMouseMove)
 window.removeEventListener('scroll', onScroll)
 window.visualViewport?.removeEventListener('resize', onResize)
-window.visualViewport?.removeEventListener('scroll', onResize)
 document.removeEventListener('visibilitychange', onVisibilityChange)
         }
     }, [onResize, setSize, tick])
@@ -440,9 +438,8 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
+                bottom: 0,
                 zIndex: 0,
-                overflow: 'hidden',
                 pointerEvents: 'none',
             } as React.CSSProperties}
         >
