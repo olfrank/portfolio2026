@@ -173,7 +173,7 @@ const ProjectCard = ({
 
         <div className="flex items-center justify-between gap-4">
           <h3
-            className="text-2xl leading-tight"
+            className="text-3xl leading-tight"
             style={{
               fontFamily: 'var(--font-serif)',
               fontWeight: 400,
@@ -297,7 +297,7 @@ const FeaturedCard = ({ project, onClick }: { project: Project; onClick: () => v
           <div>
             <div className="flex items-start justify-between gap-3">
               <h3
-                className="text-2xl leading-tight"
+                className="text-3xl leading-tight"
                 style={{
                   fontFamily: 'var(--font-serif)',
                   fontWeight: 400,
