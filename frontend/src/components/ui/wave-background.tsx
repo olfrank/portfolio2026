@@ -81,7 +81,9 @@ export function Waves({
     const progressCurrentRef = useRef(0)
     const lastColorProgress  = useRef(-1)  
 
-    const textBoundsRef = useRef<{ left: number; right: number; top: number; bottom: number } | null>(null)
+    const textBoundsRef    = useRef<{ left: number; right: number; top: number; bottom: number } | null>(null)
+    // 0 at top of page, 1 when title has fully faded (matches Hero scrollOpacity [0,400])
+    const titleProgressRef = useRef(0)
 
 
     const setSize = useCallback(() => {
@@ -192,6 +194,7 @@ export function Waves({
             if (maxScroll > 0) {
                 progressTargetRef.current = window.scrollY / maxScroll
             }
+            titleProgressRef.current = Math.min(window.scrollY / 400, 1)
             measureTextBounds()
         }
 
@@ -329,7 +332,7 @@ document.removeEventListener('visibilitychange', onVisibilityChange)
 
         const tb = textBoundsRef.current
         const TEXT_FEATHER = 60
-        const TEXT_PUSH    = 58  
+        const TEXT_PUSH    = 58 * (1 - titleProgressRef.current)
 
         for (let i = 0; i < lines.length; i++) {
             const points = lines[i]
